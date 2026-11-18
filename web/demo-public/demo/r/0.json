@@ -1,0 +1,1 @@
+{"hubAdmin":false,"limit":{"status":"ok","rateLimitType":"five_hour","utilization":null,"resetAt":"2026-11-18T17:20:00.000Z","detectedAt":null,"sourceText":null,"authError":null,"lastProbeAt":null,"blocked":false,"blockedReason":null,"blockedUntil":null},"scheduler":{"running":true,"current":null,"jobs":[],"queue":[]}}

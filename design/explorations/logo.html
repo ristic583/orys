@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Logo directions</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--violet:#7a4dff;--violet-2:#a387ff;--lime:#d4f26a;--surface:#121212;--muted:#8a8a8f}
+*{box-sizing:border-box}
+body{margin:0;background:#000;color:#f4f4f5;font:15px/1.5 Geist,system-ui,sans-serif}
+.wrap{max-width:1240px;margin:0 auto;padding:40px 24px 60px}
+h1{font-size:34px;font-weight:500;letter-spacing:-.03em;margin:0 0 6px}
+.lede{color:var(--muted);margin:0 0 30px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.opt{background:var(--surface);border-radius:26px;padding:26px;display:flex;flex-direction:column;gap:18px}
+.stage{display:flex;align-items:center;gap:26px;min-height:150px}
+.big{width:128px;height:128px;flex:none}
+.small{display:flex;flex-direction:column;gap:16px;align-items:flex-start}
+.lockup{display:flex;align-items:center;gap:12px;font-size:21px;font-weight:600;letter-spacing:-.02em}
+.lockup svg{width:38px;height:38px}
+.fav{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12px}
+.fav svg{width:16px;height:16px}
+.fav span.tab{display:flex;align-items:center;gap:8px;background:#1a1a1a;border-radius:10px 10px 0 0;padding:7px 12px;color:#ddd;font-size:12.5px}
+h2{margin:0;font-size:19px;font-weight:500}
+h2 b{color:var(--violet-2);font-weight:600;margin-right:8px}
+p{margin:0;color:var(--muted);font-size:14px}
+.word{font-weight:800;letter-spacing:-.05em}
+@media (max-width:980px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Logo directions</h1>
+  <p class="lede">Six different ideas in the current colours. Each is shown large, next to the name as in the top bar, and at browser-tab size.</p>
+  <div class="grid">
+
+    <!-- 1 Three loops -->
+    <section class="opt">
+      <template id="m1"><svg viewBox="0 0 40 40" aria-hidden="true">
+        <rect width="40" height="40" rx="12" fill="#7a4dff"/>
+        <g fill="none" stroke-width="3">
+          <circle cx="20" cy="14.5" r="6.5" stroke="#fff"/>
+          <circle cx="14" cy="24.5" r="6.5" stroke="#fff"/>
+          <circle cx="26" cy="24.5" r="6.5" stroke="#d4f26a"/>
+        </g></svg></template>
+      <div class="stage" data-m="m1"></div>
+      <h2><b>1</b>Three loops</h2>
+      <p>The product's three loops (architect, plan, build) interlocked; the build loop in lime.</p>
+    </section>
+
+    <!-- 2 Forward chevrons -->
+    <section class="opt">
+      <template id="m2"><svg viewBox="0 0 40 40" aria-hidden="true">
+        <rect width="40" height="40" rx="12" fill="#7a4dff"/>
+        <g fill="none" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 13l7 7-7 7" stroke="#fff" opacity=".45"/>
+          <path d="M16 13l7 7-7 7" stroke="#fff" opacity=".75"/>
+          <path d="M23 13l7 7-7 7" stroke="#d4f26a"/>
+        </g></svg></template>
+      <div class="stage" data-m="m2"></div>
+      <h2><b>2</b>Always moving</h2>
+      <p>Steps that keep going forward on their own; the newest step in lime. Very readable when small.</p>
+    </section>
+
+    <!-- 3 Orbit -->
+    <section class="opt">
+      <template id="m3"><svg viewBox="0 0 40 40" aria-hidden="true">
+        <circle cx="20" cy="20" r="20" fill="#7a4dff"/>
+        <circle cx="20" cy="20" r="10.5" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-dasharray="52 66" transform="rotate(-50 20 20)"/>
+        <circle cx="28.4" cy="13.7" r="4" fill="#d4f26a"/>
+        <circle cx="20" cy="20" r="3" fill="#fff"/></svg></template>
+      <div class="stage" data-m="m3"></div>
+      <h2><b>3</b>Orbit</h2>
+      <p>A worker circling the project and coming back to where it stopped. Round, calm, like the current pie.</p>
+    </section>
+
+    <!-- 4 Wordmark -->
+    <section class="opt">
+      <template id="m4"><svg viewBox="0 0 40 40" aria-hidden="true">
+        <rect width="40" height="40" rx="12" fill="#fff"/>
+        <path d="M13 29V17.5" stroke="#000" stroke-width="5" stroke-linecap="round"/>
+        <circle cx="13" cy="10.5" r="3.6" fill="#7a4dff"/>
+        <path d="M22 33V17.5h3.5a5.75 5.75 0 0 1 0 11.5H22" fill="none" stroke="#000" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg></template>
+      <div class="stage" data-m="m4" data-word="1"></div>
+      <h2><b>4</b>Lettermark</h2>
+      <p>A bold black-and-white "ip" with a violet dot on the i. Typographic and confident; reads like a brand, not an icon.</p>
+    </section>
+
+    <!-- 5 Rising bars -->
+    <section class="opt">
+      <template id="m5"><svg viewBox="0 0 40 40" aria-hidden="true">
+        <rect width="40" height="40" rx="12" fill="#161616"/>
+        <rect x="9" y="22" width="6" height="9" rx="3" fill="#7a4dff"/>
+        <rect x="17" y="16" width="6" height="15" rx="3" fill="#a387ff"/>
+        <rect x="25" y="9" width="6" height="22" rx="3" fill="#d4f26a"/>
+      </svg></template>
+      <div class="stage" data-m="m5"></div>
+      <h2><b>5</b>Progress</h2>
+      <p>Three phases growing to done, violet to lime on black. Matches the big-number, chart-heavy dashboard.</p>
+    </section>
+
+    <!-- 6 Route P -->
+    <section class="opt">
+      <template id="m6"><svg viewBox="0 0 40 40" aria-hidden="true">
+        <rect width="40" height="40" rx="12" fill="#7a4dff"/>
+        <path d="M14 30V11h8a6.5 6.5 0 0 1 0 13h-8" fill="none" stroke="#fff" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="14" cy="30" r="3.4" fill="#fff"/>
+        <circle cx="14" cy="24" r="3.4" fill="#d4f26a" stroke="#7a4dff" stroke-width="2"/>
+      </svg></template>
+      <div class="stage" data-m="m6"></div>
+      <h2><b>6</b>Route P</h2>
+      <p>A "P" drawn as a route that loops back on itself, with a lime stop where the work is now.</p>
+    </section>
+
+  </div>
+</div>
+<script>
+document.querySelectorAll(".stage").forEach(st => {
+  const svg = document.getElementById(st.dataset.m).innerHTML;
+  st.innerHTML = `<span class="big">${svg}</span>
+    <div class="small">
+      <span class="lockup">${svg}<span>AI PM</span></span>
+      <span class="fav"><span class="tab">${svg}AI PM</span></span>
+    </div>`;
+  st.querySelectorAll("svg").forEach(s => s.removeAttribute("aria-hidden"));
+  st.querySelector(".big svg").setAttribute("width","128"); st.querySelector(".big svg").setAttribute("height","128");
+});
+</script>
+</body>
+</html>

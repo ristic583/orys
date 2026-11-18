@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40">
+  <style>
+    .a{stroke:#7a4dff}.b{stroke:#a387ff}.c{stroke:#d4f26a}
+    @media (prefers-color-scheme: light){.b{stroke:#8f6dff}.c{stroke:#7f9a2e}}
+  </style>
+  <g fill="none" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round">
+    <path class="a" d="M7 11l9 9-9 9"/>
+    <path class="b" d="M15.5 11l9 9-9 9"/>
+    <path class="c" d="M24 11l9 9-9 9"/>
+  </g>
+</svg>

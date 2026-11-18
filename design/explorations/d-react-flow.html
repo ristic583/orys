@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI PM — Variant D (react-flow)</title>
+<!--
+  react-flow skill applied (agent behavior contract):
+  1 import from @xyflow/react v12   2 style.css imported   3 canvas parent has explicit height
+  4 nodeTypes defined at module level   5 custom nodes for app content   6 `nodrag` on buttons in nodes
+  8 handles hidden with opacity, never display:none   11 immutable updates   12 controlled flow (useNodesState)
+  Layout: dagre (LR) per phase inside sub-flow groups, parents listed before children.
+  Detail panel: recipe "Show node details in a sidebar panel" (store selected id, look data up).
+  Accessibility: ariaLabel on nodes, labelled controls, visible focus.
+  Every screen is a canvas: overview = project pipelines, project = plan graph, wizard = a map of the questions.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@xyflow/react@12.8.2/dist/style.css">
+<script type="importmap">
+{ "imports": {
+  "react": "https://esm.sh/react@19.1.0",
+  "react/jsx-runtime": "https://esm.sh/react@19.1.0/jsx-runtime",
+  "react-dom": "https://esm.sh/react-dom@19.1.0?external=react",
+  "react-dom/client": "https://esm.sh/react-dom@19.1.0/client?external=react",
+  "@xyflow/react": "https://esm.sh/@xyflow/react@12.8.2?external=react,react-dom",
+  "@dagrejs/dagre": "https://esm.sh/@dagrejs/dagre@1.1.4",
+  "htm": "https://esm.sh/htm@3.1.1"
+} }
+</script>
+<style>
+:root{--bg:#F6F6F9;--panel:#fff;--ink:#17171F;--sub:#6B6B7B;--line:#E4E4EC;--acc:#6D5BD0;--acc-soft:#EFECFB;--ok:#16A34A;--warn:#D97706;--bad:#DC2626;--idle:#A1A1B0}
+*{box-sizing:border-box}
+html,body,#root{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font:14px/1.45 Manrope,system-ui,sans-serif}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.shell{display:grid;grid-template-rows:56px auto 1fr;height:100%}
+.bar{display:flex;align-items:center;gap:14px;padding:0 18px;background:var(--panel);border-bottom:1px solid var(--line)}
+.logo{font-weight:800;display:flex;gap:8px;align-items:center}
+.logo i{width:20px;height:20px;border-radius:6px;background:linear-gradient(135deg,var(--acc),#9D8CF0);display:inline-block}
+.tabs{display:flex;gap:2px;background:var(--bg);border-radius:9px;padding:3px}
+.tabs a{padding:5px 12px;border-radius:7px;text-decoration:none;color:var(--sub);font-weight:600}
+.tabs a[aria-current=page]{background:var(--panel);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.06)}
+.sp{flex:1}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;border-radius:999px;padding:4px 10px;background:var(--bg);white-space:nowrap}
+.dot{width:8px;height:8px;border-radius:50%;background:currentColor}
+.btn{border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:6px 12px;font-weight:600;cursor:pointer}
+.btn:hover{border-color:#C9C9D6}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:#fff}
+.btn.sm{padding:3px 9px;font-size:12px;border-radius:6px}
+.needs{display:flex;gap:10px;padding:10px 18px;background:var(--panel);border-bottom:1px solid var(--line);overflow-x:auto}
+.need{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-left:3px solid var(--c);border-radius:8px;padding:6px 8px 6px 12px;white-space:nowrap;font-size:13px}
+.stage{display:flex;min-height:0}
+.canvas{flex:1;position:relative;min-width:0}
+.side{width:360px;flex:none;background:var(--panel);border-left:1px solid var(--line);overflow-y:auto;padding:20px}
+.side h2{margin:4px 0 2px;font-size:19px;letter-spacing:-.01em}
+.side .sub{color:var(--sub);font-size:13px}
+.side dl{display:grid;grid-template-columns:100px 1fr;gap:6px 10px;font-size:13px;margin:16px 0}
+.side dt{color:var(--sub)}.side dd{margin:0}
+.fb{background:#FFF7EB;border-radius:8px;padding:10px 12px;font-size:13px}
+.chk{display:flex;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line);font-size:13px}
+.chk span:last-child{margin-left:auto;color:var(--sub)}
+pre{background:#F4F4F8;border-radius:8px;padding:10px;font-size:12px;white-space:pre-wrap;margin:8px 0}
+.field{width:100%;border:1px solid var(--line);border-radius:8px;padding:9px 11px;background:#fff}
+textarea.field{min-height:96px}
+.pick{border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 11px;margin:0 6px 6px 0;cursor:pointer;font-size:13px}
+.pick[aria-pressed=true]{background:var(--acc);border-color:var(--acc);color:#fff}
+
+/* react-flow theming via CSS variables (skill: performance-and-styling.md) */
+.react-flow{--xy-background-color-default:var(--bg);--xy-edge-stroke-default:#C9C9D6;--xy-background-pattern-dots-color-default:#D3D3DE;--xy-controls-button-border-color-default:var(--line)}
+.react-flow__handle{opacity:0;width:6px;height:6px;min-width:0;min-height:0;border:0}
+.react-flow__node:focus-visible{outline:2px solid var(--acc);outline-offset:3px;border-radius:12px}
+
+.n{background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 1px 2px rgba(23,23,31,.04)}
+.n.sel{border-color:var(--acc);box-shadow:0 0 0 3px var(--acc-soft)}
+.proj{width:270px;padding:12px 14px;display:grid;grid-template-columns:42px 1fr;gap:2px 12px;align-items:center;cursor:pointer}
+.proj b{font-size:15px}
+.proj .meta{grid-column:2;color:var(--sub);font-size:12px}
+.stg{width:118px;padding:8px 10px;display:flex;gap:7px;align-items:center;font-size:12.5px;font-weight:600}
+.stg.future{color:var(--idle);background:#FBFBFD;border-style:dashed}
+.stg .cap{display:block;font-weight:500;font-size:11px;color:var(--sub)}
+.agent{width:168px;padding:9px 12px;display:flex;gap:9px;align-items:center}
+.agent small{display:block;color:var(--sub);font-size:11.5px}
+.phase{width:100%;height:100%;border:1.5px solid var(--line);border-radius:16px;background:rgba(255,255,255,.55)}
+.phase.active{border-color:var(--acc);background:rgba(239,236,251,.35)}
+.phase.pending{border-style:dashed}
+.phase header{display:flex;gap:10px;align-items:center;padding:12px 16px 0;font-weight:700}
+.phase header .sub{font-weight:500;color:var(--sub);font-size:12.5px}
+.task{width:220px;padding:10px 12px;cursor:pointer}
+.task .t{display:flex;gap:8px;align-items:flex-start;font-weight:600;font-size:13px;line-height:1.3}
+.task .m{color:var(--sub);font-size:11.5px;margin:4px 0 0 24px}
+.task .acts{display:flex;gap:6px;margin:8px 0 0 24px}
+.mode{width:190px;padding:12px 14px;cursor:pointer}
+.mode b{display:block}.mode span{font-size:12px;color:var(--sub)}
+.wstep{width:160px;padding:9px 12px;font-size:12.5px;font-weight:600;cursor:pointer;display:flex;gap:8px;align-items:center}
+.wstep .num{width:20px;height:20px;border-radius:50%;background:var(--bg);display:grid;place-items:center;font-size:11px;flex:none}
+.wstep.done .num{background:var(--ok);color:#fff}
+.wstep.cur .num{background:var(--acc);color:#fff}
+.dim{opacity:.32}
+.loading{display:grid;place-items:center;height:100%;color:var(--sub)}
+@media (max-width:860px){.side{position:absolute;right:0;top:0;bottom:0;width:min(340px,92%);box-shadow:-10px 0 30px rgba(0,0,0,.1);z-index:5}.bar .chip{display:none}}
+</style>
+</head>
+<body>
+<div id="root"><div class="loading">Loading React Flow…</div></div>
+<script src="data.js"></script>
+<script type="module">
+import React, { useState, useMemo, useCallback, useEffect, memo } from "react";
+import { createRoot } from "react-dom/client";
+import { ReactFlow, ReactFlowProvider, Background, Controls, MiniMap, Panel, Handle, Position, MarkerType, useNodesState, useEdgesState, useReactFlow } from "@xyflow/react";
+import dagre from "@dagrejs/dagre";
+import htm from "htm";
+const html = htm.bind(React.createElement);
+const D = window.AIPM, L = D.statusLabel;
+
+/* ---------- shared bits ---------- */
+const C = { done: "var(--ok)", running: "var(--acc)", executing: "var(--acc)", architecting: "var(--acc)", active: "var(--acc)", rework: "var(--warn)", awaiting_owner: "var(--warn)", blocked: "var(--bad)", failed: "var(--bad)" };
+const HEX = { done: "#16A34A", running: "#6D5BD0", executing: "#6D5BD0", architecting: "#6D5BD0", active: "#6D5BD0", rework: "#D97706", awaiting_owner: "#D97706", blocked: "#DC2626" };
+const col = s => C[s] || "var(--idle)";
+const Icon = ({ s, size = 16 }) => {
+  const c = col(s);
+  if (s === "done") return html`<svg width=${size} height=${size} viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="8" fill=${c}/><path d="M4.6 8.3l2.1 2.1 4.6-4.6" stroke="#fff" stroke-width="1.8" fill="none"/></svg>`;
+  if (["running", "executing", "architecting", "active"].includes(s)) return html`<svg width=${size} height=${size} viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke=${c} stroke-width="3" stroke-dasharray="28 13"><animateTransform attributeName="transform" type="rotate" from="0 8 8" to="360 8 8" dur="1.4s" repeatCount="indefinite"/></circle></svg>`;
+  if (["rework", "awaiting_owner"].includes(s)) return html`<svg width=${size} height=${size} viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="8" fill=${c}/><path d="M8 4v5" stroke="#fff" stroke-width="2"/><circle cx="8" cy="11.6" r="1.1" fill="#fff"/></svg>`;
+  if (s === "blocked") return html`<svg width=${size} height=${size} viewBox="0 0 16 16" aria-hidden="true"><rect width="16" height="16" rx="4" fill=${c}/><path d="M5 5l6 6M11 5l-6 6" stroke="#fff" stroke-width="2"/></svg>`;
+  return html`<svg width=${size} height=${size} viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="var(--idle)" stroke-width="2" stroke-dasharray="3 2.6"/></svg>`;
+};
+const Ring = ({ done, total, s }) => {
+  const r = 17, c = 2 * Math.PI * r, p = total ? done / total : s === "done" ? 1 : 0;
+  return html`<svg width="42" height="42" viewBox="0 0 42 42" style=${{ gridRow: "span 2" }} aria-hidden="true">
+    <circle cx="21" cy="21" r=${r} fill="none" stroke="#EEEEF3" stroke-width="5"/>
+    <circle cx="21" cy="21" r=${r} fill="none" stroke=${col(s === "done" ? "done" : s)} stroke-width="5" stroke-linecap="round" stroke-dasharray=${`${c * p} ${c}`} transform="rotate(-90 21 21)"/>
+    <text x="21" y="25" text-anchor="middle" font-size="11" font-weight="700" fill="#17171F">${total ? Math.round(p * 100) + "%" : "–"}</text></svg>`;
+};
+const H = ({ t = Position.Left, s = Position.Right, top, bottom }) => html`
+  ${t && html`<${Handle} type="target" position=${top ? Position.Top : t} />`}
+  ${s && html`<${Handle} type="source" position=${bottom ? Position.Bottom : s} />`}`;
+const edge = (id, source, target, state, extra = {}) => {
+  const c = state === "future" ? "#C9C9D6" : HEX[state] || "#16A34A";
+  return { id, source, target, animated: ["running", "executing", "architecting", "active"].includes(state),
+    style: { stroke: c, strokeWidth: state === "future" ? 1.4 : 2, strokeDasharray: state === "future" ? "5 5" : undefined },
+    markerEnd: { type: MarkerType.ArrowClosed, color: c, width: 16, height: 16 }, ...extra };
+};
+
+/* ---------- custom nodes (module level: skill rule 4) ---------- */
+const ProjectNode = memo(({ data, selected }) => html`
+  <div class=${"n proj" + (selected ? " sel" : "")}>
+    <${Ring} done=${data.p.done} total=${data.p.total} s=${data.p.status} />
+    <b>${data.p.name}</b>
+    <div class="meta" style=${{ color: col(data.p.status), fontWeight: 600 }}>${L[data.p.status]}${data.p.total ? ` · ${data.p.done}/${data.p.total} tasks` : ""}</div>
+    <div class="meta">P${data.p.priority} · ${data.p.profile} · ${data.p.deadline ? "due " + new Date(data.p.deadline + "T00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" }) : "no deadline"}</div>
+    <${H} t=${null} />
+  </div>`);
+const StageNode = memo(({ data }) => html`
+  <div class=${"n stg " + (data.state === "future" ? "future" : "")} style=${data.state !== "future" && data.state !== "done" ? { borderColor: col(data.state) } : null}>
+    <${Icon} s=${data.state === "future" ? "pending" : data.state} size=${14} />
+    <span>${data.label}${data.cap && html`<span class="cap">${data.cap}</span>`}</span>
+    <${H} />
+  </div>`);
+const AgentNode = memo(({ data }) => html`
+  <div class="n agent"><${Icon} s=${data.status} /><div><b>${data.label}</b><small>${data.meta}</small></div><${H} /></div>`);
+const PhaseNode = memo(({ data }) => html`
+  <div class=${"phase " + data.ph.status}>
+    <header><${Icon} s=${data.ph.status === "active" ? "running" : data.ph.status} />Phase ${data.ph.idx}: ${data.ph.title}
+      <span class="sub">${data.ph.tasks.filter(t => t.status === "done").length}/${data.ph.tasks.length} · ${data.ph.branch}</span></header>
+    <${H} top=${true} bottom=${true} />
+  </div>`);
+const TaskNode = memo(({ data, selected }) => html`
+  <div class=${"n task" + (selected || data.sel ? " sel" : "")} style=${{ borderLeft: `3px solid ${col(data.t.status)}` }}>
+    <div class="t"><${Icon} s=${data.t.status} />${data.t.title}</div>
+    <div class="m">${L[data.t.status]}${data.t.attempts ? ` · try ${data.t.attempts}/${data.t.max}` : ""} · ${data.t.model}</div>
+    ${data.t.status === "rework" && html`<div class="acts"><button class="btn sm pri nodrag" onClick=${e => { e.stopPropagation(); }}>Retry</button><button class="btn sm nodrag" onClick=${e => e.stopPropagation()}>Skip</button></div>`}
+    <${H} />
+  </div>`);
+const ModeNode = memo(({ data }) => html`
+  <div class=${"n mode" + (data.on ? " sel" : "")}><b>${data.m.label}</b><span>${data.m.hint}</span><${H} top=${true} bottom=${true} /></div>`);
+const StepNode = memo(({ data }) => html`
+  <div class=${"n wstep " + data.state + (data.state === "cur" ? " sel" : "")}><span class="num">${data.state === "done" ? "✓" : data.i}</span>${data.label}<${H} top=${true} bottom=${true} /></div>`);
+const nodeTypes = { project: ProjectNode, stage: StageNode, agent: AgentNode, phase: PhaseNode, task: TaskNode, mode: ModeNode, step: StepNode };
+
+/* ---------- graph builders ---------- */
+function overviewGraph() {
+  const nodes = [], edges = [];
+  D.projects.forEach((p, r) => {
+    const y = r * 110, pid = "p-" + p.slug;
+    nodes.push({ id: pid, type: "project", position: { x: 0, y: y - 14 }, data: { p }, ariaLabel: `${p.name}, ${L[p.status]}` });
+    D.flowSteps.forEach((s, j) => {
+      const state = p.status === "done" || j < p.flowAt ? "done" : j === p.flowAt ? p.status : "future";
+      const cap = j === p.flowAt && p.status !== "done" ? (p.status === "executing" ? `${p.done}/${p.total} tasks` : L[p.status]) : null;
+      const id = `${pid}-${j}`;
+      nodes.push({ id, type: "stage", position: { x: 330 + j * 160, y }, data: { label: s, state, cap }, draggable: false, ariaLabel: `${p.name}: ${s}, ${state}` });
+      const edgeState = state === "future" ? "future" : state === "done" ? "done" : state;
+      edges.push(edge(`e-${id}`, j ? `${pid}-${j - 1}` : pid, id, edgeState));
+    });
+  });
+  return { nodes, edges };
+}
+function projectGraph(selId) {
+  const P = D.project, nodes = [], edges = [], W = 220, Hh = 66, PAD = 18, HEAD = 46;
+  const agents = P.flow.filter(f => f.id !== "execute");
+  agents.forEach((f, i) => {
+    nodes.push({ id: "a-" + f.id, type: "agent", position: { x: i * 205, y: 0 }, data: f, ariaLabel: `${f.label}, ${f.status}` });
+    if (i) edges.push(edge(`ea-${i}`, "a-" + agents[i - 1].id, "a-" + f.id, f.status));
+  });
+  let y = 120;
+  P.phases.forEach((ph, pi) => {
+    const g = new dagre.graphlib.Graph().setDefaultEdgeLabel(() => ({}));
+    g.setGraph({ rankdir: "LR", nodesep: 16, ranksep: 54, marginx: 0, marginy: 0 });
+    const keys = new Set(ph.tasks.map(t => t.key));
+    ph.tasks.forEach(t => g.setNode(t.key, { width: W, height: t.status === "rework" ? Hh + 30 : Hh }));
+    ph.tasks.forEach(t => t.deps.filter(k => keys.has(k)).forEach(k => g.setEdge(k, t.key)));
+    dagre.layout(g);
+    const gw = g.graph().width + PAD * 2, gh = g.graph().height + HEAD + PAD;
+    const gid = "ph-" + ph.idx;
+    nodes.push({ id: gid, type: "phase", position: { x: 0, y }, style: { width: Math.max(gw, 560), height: gh }, data: { ph }, ariaLabel: `Phase ${ph.idx} ${ph.title}` }); // parent first
+    ph.tasks.forEach(t => {
+      const n = g.node(t.key);
+      nodes.push({ id: t.key, type: "task", parentId: gid, extent: "parent", position: { x: PAD + n.x - W / 2, y: HEAD + n.y - n.height / 2 }, data: { t, sel: t.key === selId }, ariaLabel: `${t.title}, ${L[t.status]}` });
+      t.deps.filter(k => keys.has(k)).forEach(k => edges.push(edge(`e-${k}-${t.key}`, k, t.key, t.status === "pending" ? "future" : t.status === "running" ? "running" : "done")));
+    });
+    const prev = pi ? "ph-" + P.phases[pi - 1].idx : "a-owner";
+    edges.push(edge(`eg-${gid}`, prev, gid, ph.status === "pending" ? "future" : "done", pi ? { label: P.phases[pi - 1].status === "done" ? "merged" : "merge after review", labelStyle: { fontSize: 11, fill: "#6B6B7B" }, labelBgStyle: { fill: "#F6F6F9" } } : {}));
+    y += gh + 70;
+  });
+  return { nodes, edges };
+}
+function wizardGraph(mode, step) {
+  const modes = Object.entries(D.modes), CW = 230;
+  const nodes = [{ id: "start", type: "step", position: { x: CW + 15, y: 0 }, data: { label: "New project", i: "+", state: "done" } }], edges = [];
+  const maxLen = Math.max(...modes.map(([, m]) => m.steps.length));
+  modes.forEach(([k, m], c) => {
+    const x = c * CW, on = k === mode, cls = on ? "" : "dim";
+    nodes.push({ id: "m-" + k, type: "mode", position: { x: x - 15, y: 80 }, data: { m, on, k }, className: cls, ariaLabel: m.label });
+    edges.push(edge("e-m-" + k, "start", "m-" + k, on ? "done" : "future"));
+    m.steps.forEach((s, i) => {
+      const state = !on ? "" : i < step ? "done" : i === step ? "cur" : "";
+      nodes.push({ id: `s-${k}-${i}`, type: "step", position: { x, y: 200 + i * 72 }, data: { label: s, i: i + 1, state, k, idx: i }, className: cls, ariaLabel: `${m.label}, step ${i + 1}: ${s}` });
+      edges.push(edge(`e-${k}-${i}`, i ? `s-${k}-${i - 1}` : "m-" + k, `s-${k}-${i}`, !on ? "future" : i < step ? "done" : i === step ? "running" : "future"));
+    });
+    edges.push(edge(`e-${k}-rev`, `s-${k}-${m.steps.length - 1}`, "review", on && step >= m.steps.length ? "running" : "future"));
+  });
+  const doneAll = step >= D.modes[mode].steps.length;
+  nodes.push({ id: "review", type: "step", position: { x: CW, y: 200 + maxLen * 72 + 20 }, data: { label: "Review and start", i: "✓", state: doneAll ? "cur" : "", idx: D.modes[mode].steps.length, k: mode } });
+  return { nodes, edges };
+}
+
+/* ---------- screens ---------- */
+function Canvas({ build, deps, onNodeClick, fitOptions, children, label }) {
+  const init = useMemo(build, deps);
+  const [nodes, setNodes, onNodesChange] = useNodesState(init.nodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(init.edges);
+  useEffect(() => { setNodes(init.nodes); setEdges(init.edges); }, [init]);
+  return html`<${ReactFlow} nodes=${nodes} edges=${edges} onNodesChange=${onNodesChange} onEdgesChange=${onEdgesChange}
+      nodeTypes=${nodeTypes} onNodeClick=${onNodeClick} nodesConnectable=${false} fitView fitViewOptions=${fitOptions || { padding: 0.12 }}
+      minZoom=${0.2} proOptions=${{ hideAttribution: true }} aria-label=${label}>
+    <${Background} gap=${18} size=${1.2} />
+    <${Controls} showInteractive=${false} />
+    ${children}
+  </${ReactFlow}>`;
+}
+
+function Overview() {
+  const needs = D.projects.filter(p => p.attention);
+  const onNodeClick = useCallback((_, n) => { if (n.type === "project" && n.data.p.slug === "links") location.hash = "project"; }, []);
+  return html`<${React.Fragment}>
+    <div class="needs">${needs.map(p => html`<div class="need" key=${p.slug} style=${{ "--c": col(p.status) }}><${Icon} s=${p.status} /><b>${p.name}</b><span class="sub" style=${{ color: "var(--sub)" }}>${p.attention}</span><button class=${"btn sm " + (p.status === "blocked" ? "" : "pri")}>${p.status === "blocked" ? "Answer" : "Review plan"}</button></div>`)}</div>
+    <div class="stage"><div class="canvas">
+      <${Canvas} build=${overviewGraph} deps=${[]} onNodeClick=${onNodeClick} label="Projects and their stages">
+        <${Panel} position="top-right"><span class="chip" style=${{ background: "#fff", border: "1px solid var(--line)" }}>Click Links to open its plan</span><//>
+      <//>
+    </div></div><//>`;
+}
+
+function TaskPanel({ id }) {
+  const P = D.project, t = P.phases.flatMap(p => p.tasks).find(x => x.key === id);
+  if (!t) return null;
+  const v = P.verifications[t.key] || [];
+  return html`<aside class="side" aria-label="Task details">
+    <div style=${{ display: "flex", gap: 8, alignItems: "center", color: col(t.status), fontWeight: 700 }}><${Icon} s=${t.status} />${L[t.status]}</div>
+    <h2>${t.title}</h2><div class="sub">${t.key}</div>
+    <dl><dt>Attempts</dt><dd>${t.attempts} of ${t.max}</dd><dt>Model</dt><dd>${t.model}, ${t.effort}</dd><dt>Needs</dt><dd>${t.deps.join(", ") || "Nothing"}</dd></dl>
+    ${t.feedback && html`<h3 style=${{ fontSize: 14, margin: "0 0 8px" }}>What to fix</h3><div class="fb">${t.feedback}</div>`}
+    ${v.length > 0 && html`<h3 style=${{ fontSize: 14, margin: "18px 0 4px" }}>Checks</h3>${v.map(c => html`<div key=${c.cmd}><div class="chk"><${Icon} s=${c.exit ? "blocked" : "done"} size=${14} />${c.cmd}<span>${(c.ms / 1000).toFixed(1)}s</span></div>${c.tail && html`<pre>${c.tail}</pre>`}</div>`)}`}
+    <div style=${{ display: "flex", gap: 8, marginTop: 16 }}>${t.status === "running" ? html`<button class="btn pri">Open live log</button>` : html`<button class="btn pri">Retry now</button><button class="btn">Skip</button>`}<button class="btn">Edit</button></div>
+  </aside>`;
+}
+function Project() {
+  const [sel, setSel] = useState("p2-rate");
+  const onNodeClick = useCallback((_, n) => { if (n.type === "task") setSel(n.id); }, []);
+  const P = D.project;
+  return html`<div class="stage">
+    <div class="canvas">
+      <${Canvas} build=${() => projectGraph(sel)} deps=${[sel]} onNodeClick=${onNodeClick} label="Plan for Links">
+        <${MiniMap} pannable zoomable nodeColor=${n => n.type === "task" ? (HEX[n.data.t.status] || "#C9C9D6") : "#E4E4EC"} ariaLabel="Plan overview" />
+        <${Panel} position="bottom-center"><div class="n" style=${{ padding: "10px 14px", display: "flex", gap: 12, alignItems: "center" }}>
+          <b style=${{ fontSize: 16 }}>Links</b><span class="chip" style=${{ color: col("executing") }}><span class="dot"></span>Building</span>
+          <span class="sub" style=${{ color: "var(--sub)" }}>${P.done}/${P.total} tasks · phase 2 of 3</span>
+          <button class="btn sm">Edit plan</button><button class="btn sm">Pause</button></div><//>
+      <//>
+    </div>
+    <${TaskPanel} id=${sel} />
+  </div>`;
+}
+
+function Wizard() {
+  const [mode, setMode] = useState("existing");
+  const [step, setStep] = useState(0);
+  const M = D.modes[mode], name = M.steps[step], h = D.stepHelp[name];
+  const onNodeClick = useCallback((_, n) => {
+    if (n.type === "mode") { setMode(n.data.k); setStep(0); }
+    if (n.type === "step" && n.data.k) { setMode(n.data.k); setStep(n.data.idx); }
+  }, []);
+  let body;
+  if (!h) body = html`<p class="sub">The ${M.first.toLowerCase()} runs first. You approve the plan before anything is built.</p>
+    <dl>${M.steps.map(s => html`<${React.Fragment} key=${s}><dt>${s}</dt><dd>${D.stepHelp[s].value || (D.stepHelp[s].items || []).slice(0, 2).join(", ") || "Balanced, P3"}</dd><//>`)}</dl>
+    <button class="btn pri" style=${{ width: "100%" }}>Create and start</button>`;
+  else body = html`<p class="sub" style=${{ margin: "0 0 12px" }}>${h.hint}</p>
+    ${h.kind === "text" && html`<input class="field" defaultValue=${h.value} aria-label=${h.q} />`}
+    ${h.kind === "area" && html`<textarea class="field" defaultValue=${h.value} aria-label=${h.q}></textarea>`}
+    ${h.kind === "repo" && html`<input class="field" defaultValue=${h.value} aria-label="Repository path" />${D.repoCheck.map(c => html`<div class="chk" key=${c.text}><${Icon} s="done" size=${14} />${c.text}</div>`)}`}
+    ${(h.kind === "chips" || h.kind === "list") && h.items.map((c, i) => html`<button class="pick" key=${c} aria-pressed=${i < 2}>${c}</button>`)}
+    ${h.kind === "toggle" && html`<button class="pick" aria-pressed="true">Keep behaviour</button><button class="pick">May change</button>`}
+    ${h.kind === "profile" && html`<div>${["Quality", "Balanced", "Speed", "Cost"].map(x => html`<button class="pick" key=${x} aria-pressed=${x === "Balanced"}>${x}</button>`)}</div><input class="field" type="date" aria-label="Deadline" style=${{ marginTop: 8 }} />`}`;
+  return html`<div class="stage">
+    <div class="canvas">
+      <${Canvas} build=${() => wizardGraph(mode, step)} deps=${[mode, step]} onNodeClick=${onNodeClick} label="New project questions" fitOptions=${{ padding: 0.08 }}>
+        <${Panel} position="top-left"><span class="chip" style=${{ background: "#fff", border: "1px solid var(--line)" }}>Pick a path, then click any step to jump to it</span><//>
+      <//>
+    </div>
+    <aside class="side" aria-label="Current question">
+      <div class="sub">${M.label} · step ${Math.min(step + 1, M.steps.length + 1)} of ${M.steps.length + 1}</div>
+      <h2 style=${{ margin: "6px 0 6px" }}>${h ? h.q : "Ready to start"}</h2>
+      ${body}
+      <div style=${{ display: "flex", gap: 8, marginTop: 20 }}>
+        ${step > 0 && html`<button class="btn" onClick=${() => setStep(step - 1)}>Back</button>`}
+        ${h && html`<button class="btn pri" onClick=${() => setStep(step + 1)}>Continue</button>`}
+      </div>
+    </aside>
+  </div>`;
+}
+
+function App() {
+  const [view, setView] = useState((location.hash || "#overview").slice(1));
+  useEffect(() => { const f = () => setView((location.hash || "#overview").slice(1)); addEventListener("hashchange", f); return () => removeEventListener("hashchange", f); }, []);
+  const Screen = { overview: Overview, project: Project, wizard: Wizard }[view] || Overview;
+  return html`<div class="shell">
+    <header class="bar">
+      <span class="logo"><i></i>AI PM</span>
+      <nav class="tabs" aria-label="Main">${[["overview", "Projects"], ["project", "Links"], ["wizard", "New project"]].map(([k, l]) => html`<a key=${k} href=${"#" + k} aria-current=${view === k ? "page" : undefined}>${l}</a>`)}</nav>
+      <span class="sp"></span>
+      <span class="chip" style=${{ color: "var(--acc)" }}><span class="dot"></span>Worker: links / ${D.current.task} · ${D.current.startedMin}m</span>
+      <span class="chip" style=${{ color: "var(--ok)" }}><span class="dot"></span>Limit OK · 62% · resets ${D.limit.resetAt}</span>
+      <a class="btn pri" href="#wizard" style=${{ textDecoration: "none" }}>New project</a>
+    </header>
+    ${view !== "overview" && html`<div></div>`}
+    <${ReactFlowProvider} key=${view}><${Screen} /><//>
+  </div>`;
+}
+createRoot(document.getElementById("root")).render(html`<${App} />`);
+</script>
+</body>
+</html>

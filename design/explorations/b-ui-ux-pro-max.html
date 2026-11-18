@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI PM — Variant B (ui-ux-pro-max)</title>
+<!--
+  DESIGN SYSTEM (ui-ux-pro-max, `--design-system --density 8 --variance 5 --motion 3`)
+  Style: Dark Mode (OLED) + Data-Dense Dashboard (pattern search returned an off-topic
+  "FAQ landing" twice, so layout comes from the style domain's data-dense-dashboard row).
+  Colors: bg #0F172A · card #1B2336 · muted #272F42 · border #475569 · fg #F8FAFC
+          muted-fg #94A3B8 · accent/run #22C55E · destructive #EF4444 (+ amber #F59E0B for "waiting")
+  Type:   IBM Plex Sans (UI) / JetBrains Mono (numbers, keys, logs)
+  Grid:   12 col, gap 8px, card padding 12px, row 36px, sidebar 240px, header 56px
+  Rules applied: icons + text for every status (never color alone), Lucide SVG icons,
+  visible focus, cursor-pointer, 150–200ms hover transitions, reduced motion, "Step x of y".
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0F172A; --card:#1B2336; --muted:#272F42; --border:#475569; --border-soft:#2C3650;
+  --fg:#F8FAFC; --mfg:#94A3B8; --accent:#22C55E; --on-accent:#0F172A; --danger:#EF4444; --warn:#F59E0B; --info:#60A5FA;
+  --gap:8px; --pad:12px; --row:36px; --side:240px; --head:56px;
+  --mono:"JetBrains Mono",ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--fg);font:14px/1.5 "IBM Plex Sans",system-ui,sans-serif}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid #fff;outline-offset:2px}
+a{color:inherit;text-decoration:none}
+.ico{width:16px;height:16px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.spin{animation:spin 1.2s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.spin{animation:none}*{transition:none!important}}
+.mono{font-family:var(--mono);font-size:12.5px}
+.m{color:var(--mfg)}
+
+.app{display:grid;grid-template-columns:var(--side) 1fr;grid-template-rows:var(--head) 1fr;min-height:100vh}
+.side{grid-row:1/3;background:#0B1222;border-right:1px solid var(--border-soft);padding:12px;display:flex;flex-direction:column;gap:4px}
+.brand{display:flex;align-items:center;gap:8px;font-weight:700;height:32px;padding:0 8px;margin-bottom:12px}
+.brand svg{color:var(--accent)}
+.navi{display:flex;align-items:center;gap:10px;height:36px;padding:0 10px;border-radius:6px;color:var(--mfg);cursor:pointer;transition:background .15s,color .15s}
+.navi:hover{background:var(--muted);color:var(--fg)}
+.navi[aria-current=page]{background:var(--muted);color:var(--fg)}
+.side h6{margin:16px 10px 6px;font-size:12px;font-weight:600;color:var(--mfg)}
+.pj{display:grid;grid-template-columns:18px 1fr auto;gap:8px;align-items:center;height:34px;padding:0 10px;border-radius:6px;cursor:pointer;color:var(--mfg);transition:background .15s}
+.pj:hover{background:var(--muted);color:var(--fg)}
+.ring{width:18px;height:18px}
+.head{display:flex;align-items:center;gap:12px;padding:0 16px;border-bottom:1px solid var(--border-soft)}
+.search{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--border-soft);border-radius:6px;height:34px;padding:0 10px;width:280px;color:var(--mfg)}
+.search input{background:none;border:0;outline:0;width:100%}
+.pill{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;border-radius:6px;background:var(--card);border:1px solid var(--border-soft);font-size:13px;white-space:nowrap}
+.sp{flex:1}
+.btn{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 12px;border-radius:6px;border:1px solid var(--border);background:var(--muted);cursor:pointer;font-weight:500;transition:background .15s,border-color .15s;white-space:nowrap}
+.btn:hover{border-color:var(--mfg)}
+.btn.pri{background:var(--accent);color:var(--on-accent);border-color:var(--accent);font-weight:600}
+.btn.pri:hover{filter:brightness(1.08)}
+.btn.dng{background:transparent;color:var(--danger);border-color:var(--danger)}
+.btn.sm{height:28px;padding:0 9px;font-size:13px}
+
+main{padding:16px;overflow:auto}
+.g{display:grid;grid-template-columns:repeat(12,1fr);gap:var(--gap)}
+.card{background:var(--card);border:1px solid var(--border-soft);border-radius:8px;padding:var(--pad)}
+.ch{display:flex;align-items:center;gap:8px;margin:-2px 0 10px;font-weight:600}
+.ch .m{font-weight:400}
+.s3{grid-column:span 3}.s4{grid-column:span 4}.s5{grid-column:span 5}.s6{grid-column:span 6}.s7{grid-column:span 7}.s8{grid-column:span 8}.s12{grid-column:span 12}
+.kpi .v{font-family:var(--mono);font-size:26px;font-weight:600;line-height:1.1;margin-top:4px}
+.kpi .l{color:var(--mfg);font-size:13px;display:flex;align-items:center;gap:6px}
+.kpi .d{font-size:12.5px;color:var(--mfg);margin-top:2px}
+
+.st{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:500;white-space:nowrap}
+.st.done{color:var(--accent)}.st.run{color:var(--info)}.st.warn{color:var(--warn)}.st.bad{color:var(--danger)}.st.idle{color:var(--mfg)}
+
+.proj{display:grid;grid-template-columns:1fr auto;gap:6px 12px;padding:12px;border:1px solid var(--border-soft);border-radius:8px;background:#172036;cursor:pointer;transition:border-color .15s}
+.proj:hover{border-color:var(--border)}
+.proj.attn{border-color:rgba(245,158,11,.55)}
+.proj.blk{border-color:rgba(239,68,68,.55)}
+.proj h4{margin:0;font-size:15px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.tag{font-family:var(--mono);font-size:11.5px;color:var(--mfg);background:var(--muted);border-radius:4px;padding:1px 6px}
+.flow{grid-column:1/-1;display:flex;align-items:center;gap:4px;margin-top:4px}
+.flow i{flex:1;height:6px;border-radius:3px;background:var(--muted)}
+.flow i.done{background:var(--accent)}
+.flow i.run{background:var(--info)}
+.flow i.warn{background:var(--warn)}
+.flow i.bad{background:var(--danger)}
+.flowl{grid-column:1/-1;display:flex;justify-content:space-between;font-size:11.5px;color:var(--mfg)}
+.callout{grid-column:1/-1;display:flex;gap:8px;align-items:flex-start;background:rgba(245,158,11,.08);border-radius:6px;padding:8px 10px;font-size:13px}
+.callout.bad{background:rgba(239,68,68,.08)}
+.callout .btn{margin-left:auto}
+
+table{width:100%;border-collapse:collapse}
+th{font-weight:500;color:var(--mfg);text-align:left;font-size:12.5px;padding:0 8px;height:32px;border-bottom:1px solid var(--border-soft);position:sticky;top:0;background:var(--card)}
+td{height:var(--row);padding:0 8px;border-bottom:1px solid var(--border-soft);font-size:13px}
+td.num,th.num{text-align:right;font-family:var(--mono)}
+tr:hover td{background:#202a40}
+.bars{display:flex;align-items:flex-end;gap:6px;height:120px;padding-top:8px}
+.bars div{flex:1;display:flex;flex-direction:column-reverse;gap:1px}
+.bars b{display:block;border-radius:2px}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--mfg);margin-top:8px}
+.legend span::before{content:"";display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px;background:var(--c)}
+.meter{height:8px;background:var(--muted);border-radius:4px;overflow:hidden}
+.meter b{display:block;height:100%;background:var(--accent)}
+
+/* project page: GH-Actions style */
+.ph{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.ph h1{margin:0;font-size:20px}
+.agent{display:flex;align-items:center;gap:0;overflow-x:auto;padding:4px 0}
+.ag{display:flex;align-items:center;gap:8px;background:#172036;border:1px solid var(--border-soft);border-radius:6px;padding:6px 10px;white-space:nowrap}
+.ag small{display:block;color:var(--mfg);font-size:11.5px;font-family:var(--mono)}
+.conn{width:26px;height:2px;background:var(--border);flex:none}
+.conn.done{background:var(--accent)}
+.jobs{display:flex;align-items:flex-start;gap:0;overflow-x:auto;padding:8px 2px 12px}
+.job{flex:none;width:272px;background:#172036;border:1px solid var(--border-soft);border-radius:8px}
+.job.active{border-color:var(--info)}
+.job header{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--border-soft);font-weight:600}
+.job header .m{font-weight:400;margin-left:auto;font-family:var(--mono);font-size:12px}
+.step{display:grid;grid-template-columns:16px 1fr auto;gap:8px;align-items:center;width:100%;min-height:36px;padding:6px 12px;background:none;border:0;border-bottom:1px solid var(--border-soft);text-align:left;cursor:pointer;transition:background .15s}
+.step:last-child{border-bottom:0}
+.step:hover{background:#202a40}
+.step[aria-pressed=true]{background:#24304a;box-shadow:inset 2px 0 0 var(--info)}
+.step .k{font-family:var(--mono);font-size:11.5px;color:var(--mfg)}
+.step .dep{grid-column:2/-1;font-size:11.5px;color:var(--mfg);font-family:var(--mono);margin-top:-4px}
+.jc{flex:none;width:40px;align-self:center;height:2px;background:var(--border);position:relative;margin-top:-40px}
+.jc.done{background:var(--accent)}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--border-soft);margin:-2px -12px 12px;padding:0 8px}
+.tab{background:none;border:0;padding:8px 10px;color:var(--mfg);cursor:pointer;border-bottom:2px solid transparent}
+.tab[aria-selected=true]{color:var(--fg);border-color:var(--accent)}
+.log{background:#0A0F1C;border:1px solid var(--border-soft);border-radius:6px;font-family:var(--mono);font-size:12.5px;line-height:1.7;padding:8px 0;max-height:300px;overflow:auto}
+.log div{display:grid;grid-template-columns:44px 1fr;padding:0 10px}
+.log div span:first-child{color:#475569;text-align:right;padding-right:12px;user-select:none}
+.log .e{color:#FCA5A5}.log .o{color:#86EFAC}.log .h{color:var(--fg);font-weight:600}
+.kv{display:grid;grid-template-columns:120px 1fr;gap:6px 10px;font-size:13px}
+.kv dt{color:var(--mfg)}.kv dd{margin:0}
+
+/* wizard */
+.stepper{display:flex;gap:4px;margin:8px 0 6px}
+.stepper i{flex:1;height:4px;border-radius:2px;background:var(--muted)}
+.stepper i.on{background:var(--accent)}
+.modes{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--gap)}
+.mode{text-align:left;background:#172036;border:1px solid var(--border-soft);border-radius:8px;padding:12px;cursor:pointer;transition:border-color .15s;min-height:44px}
+.mode:hover{border-color:var(--border)}
+.mode[aria-pressed=true]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.mode b{display:flex;align-items:center;gap:8px}
+.mode p{margin:4px 0 0;color:var(--mfg);font-size:13px}
+.mode .tag{margin-top:8px;display:inline-block}
+label.f{display:block;font-weight:600;margin-bottom:4px}
+.help{color:var(--mfg);font-size:13px;margin:0 0 10px}
+.in{width:100%;background:#0B1222;border:1px solid var(--border);border-radius:6px;padding:9px 10px;min-height:40px}
+textarea.in{min-height:96px;resize:vertical}
+.chip{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 10px;border-radius:6px;border:1px solid var(--border);background:transparent;cursor:pointer;margin:0 6px 6px 0;transition:background .15s}
+.chip[aria-pressed=true]{background:rgba(34,197,94,.12);border-color:var(--accent);color:var(--accent)}
+.seg{display:inline-flex;border:1px solid var(--border);border-radius:6px;overflow:hidden}
+.seg button{border:0;background:transparent;padding:0 12px;height:34px;cursor:pointer;border-right:1px solid var(--border)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed=true]{background:var(--accent);color:var(--on-accent);font-weight:600}
+.sl{list-style:none;margin:0;padding:0}
+.sl li{display:flex;align-items:center;gap:8px;min-height:32px;font-size:13px;color:var(--mfg);cursor:pointer}
+.sl li.cur{color:var(--fg);font-weight:600}
+.sl li.done{color:var(--fg)}
+.nb{font-family:var(--mono);font-size:11.5px;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;background:var(--muted);flex:none}
+.sl li.done .nb{background:var(--accent);color:var(--on-accent)}
+.sl li.cur .nb{background:var(--fg);color:var(--bg)}
+[hidden]{display:none!important}
+@media (max-width:1100px){.s3{grid-column:span 6}.s8,.s4,.s5,.s7,.s6{grid-column:span 12}}
+@media (max-width:820px){.app{grid-template-columns:1fr}.side{display:none}.search{display:none}.modes{grid-template-columns:1fr}.s3{grid-column:span 12}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></symbol>
+  <symbol id="i-run" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></symbol>
+  <symbol id="i-warn" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
+  <symbol id="i-wait" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-dasharray="4 3"/></symbol>
+  <symbol id="i-block" viewBox="0 0 24 24"><polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></symbol>
+  <symbol id="i-dash" viewBox="0 0 24 24"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5v14"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><rect x="14" y="4" width="4" height="16" rx="1"/><rect x="6" y="4" width="4" height="16" rx="1"/></symbol>
+  <symbol id="i-retry" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></symbol>
+  <symbol id="i-skip" viewBox="0 0 24 24"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" x2="19" y1="5" y2="19"/></symbol>
+  <symbol id="i-branch" viewBox="0 0 24 24"><line x1="6" x2="6" y1="3" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></symbol>
+  <symbol id="i-zap" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+  <symbol id="i-term" viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" x2="20" y1="19" y2="19"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></symbol>
+</svg>
+
+<div class="app">
+  <aside class="side">
+    <div class="brand"><svg class="ico"><use href="#i-zap"/></svg>AI PM</div>
+    <a class="navi" href="#overview" data-v="overview"><svg class="ico"><use href="#i-dash"/></svg>Overview</a>
+    <a class="navi" href="#project" data-v="project"><svg class="ico"><use href="#i-branch"/></svg>Pipelines</a>
+    <a class="navi" href="#overview"><svg class="ico"><use href="#i-chart"/></svg>Usage</a>
+    <a class="navi" href="#wizard" data-v="wizard"><svg class="ico"><use href="#i-plus"/></svg>New project</a>
+    <h6>Projects</h6>
+    <div id="sideProjects"></div>
+  </aside>
+  <header class="head">
+    <label class="search"><svg class="ico"><use href="#i-search"/></svg><input placeholder="Search tasks, runs, projects" aria-label="Search"></label>
+    <span class="sp"></span>
+    <span class="pill"><svg class="ico spin" style="color:var(--info)"><use href="#i-run"/></svg><span class="mono">links / p2-shorten</span><span class="m">4m</span></span>
+    <span class="pill"><svg class="ico" style="color:var(--accent)"><use href="#i-check"/></svg>Limit OK <span class="mono m">62%</span></span>
+    <a class="btn pri" href="#wizard"><svg class="ico"><use href="#i-plus"/></svg>New project</a>
+  </header>
+  <main>
+    <section id="overview" hidden></section>
+    <section id="project" hidden></section>
+    <section id="wizard" hidden></section>
+  </main>
+</div>
+
+<script src="data.js"></script>
+<script>
+const D = window.AIPM, L = D.statusLabel, $ = s => document.querySelector(s);
+const ico = (id, cls = "") => `<svg class="ico ${cls}"><use href="#i-${id}"/></svg>`;
+const tone = s => ({done:"done",running:"run",executing:"run",architecting:"run",rework:"warn",awaiting_owner:"warn",blocked:"bad",failed:"bad",active:"run"}[s] || "idle");
+const icon = s => ({done:"check",running:"run",executing:"run",architecting:"run",rework:"warn",awaiting_owner:"user",blocked:"block",active:"run"}[s] || "wait");
+const st = s => `<span class="st ${tone(s)}">${ico(icon(s), ["running","executing","architecting"].includes(s) ? "spin" : "")}${L[s]}</span>`;
+const ring = (d, t, s) => { const c = 2*Math.PI*7, p = t ? d/t : (s==="done"?1:0); const col = {done:"var(--accent)",run:"var(--info)",warn:"var(--warn)",bad:"var(--danger)",idle:"var(--mfg)"}[tone(s)];
+  return `<svg class="ring" viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="7" fill="none" stroke="var(--muted)" stroke-width="3"/><circle cx="9" cy="9" r="7" fill="none" stroke="${col}" stroke-width="3" stroke-dasharray="${c*p} ${c}" transform="rotate(-90 9 9)" stroke-linecap="round"/></svg>`; };
+const date = d => d ? new Date(d+"T00:00").toLocaleDateString("en-GB",{day:"numeric",month:"short"}) : "—";
+
+$("#sideProjects").innerHTML = D.projects.map(p => `<a class="pj" href="#project">${ring(p.done,p.total,p.status)}<span>${p.name}</span><span class="mono m">${p.total?`${p.done}/${p.total}`:"—"}</span></a>`).join("");
+
+function overview(){
+  const P = D.projects, need = P.filter(p=>p.attention).length, cost = P.reduce((a,p)=>a+p.usage7d.cost,0);
+  const kinds = [["Worker","#22C55E",.58],["Review","#60A5FA",.17],["Planner","#A78BFA",.15],["Architect","#F59E0B",.10]];
+  const days = P[0].usage7d.days.map((_,i)=>P.reduce((a,p)=>a+p.usage7d.days[i],0)), mx = Math.max(...days);
+  const dl = ["Tue","Wed","Thu","Fri","Sat","Sun","Mon"];
+  $("#overview").innerHTML = `<div class="g">
+    <div class="card kpi s3"><div class="l">${ico("run")}Active projects</div><div class="v">${P.filter(p=>!["done","draft"].includes(p.status)).length}</div><div class="d">1 worker running now</div></div>
+    <div class="card kpi s3"><div class="l" style="color:var(--warn)">${ico("user")}Needs you</div><div class="v" style="color:var(--warn)">${need}</div><div class="d">1 plan approval, 1 escalation</div></div>
+    <div class="card kpi s3"><div class="l">${ico("check")}Tasks done, 7d</div><div class="v">14</div><div class="d">+5 vs previous 7d · 2 reworks</div></div>
+    <div class="card kpi s3"><div class="l">${ico("zap")}Plan window</div><div class="v">62%</div><div class="meter" style="margin-top:6px"><b style="width:62%"></b></div><div class="d">Resets ${D.limit.resetAt}</div></div>
+
+    <div class="card s8"><div class="ch">Projects <span class="m">sorted by what needs you</span></div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:var(--gap)">
+      ${[...P].sort((a,b)=>(!!b.attention)-(!!a.attention)).map(p => {
+        const seg = D.flowSteps.map((s,i)=>`<i class="${p.status==="done"||i<p.flowAt?"done":i===p.flowAt?tone(p.status):""}" title="${s}"></i>`).join("");
+        return `<a class="proj ${p.status==="blocked"?"blk":p.attention?"attn":""}" href="#project">
+          <h4>${p.name}</h4>${st(p.status)}
+          <div class="chips"><span class="tag">${p.mode}</span><span class="tag">P${p.priority}</span><span class="tag">${p.profile}</span><span class="tag">due ${date(p.deadline)}</span></div>
+          <span class="mono m">${p.total?`${p.done}/${p.total}`:"no plan"}</span>
+          <div class="flow" aria-label="Stage ${p.flowAt+1} of 7">${seg}</div>
+          <div class="flowl"><span>Architect</span><span>Plan</span><span>You</span><span>Build</span><span>Done</span></div>
+          ${p.attention?`<div class="callout ${p.status==="blocked"?"bad":""}">${ico(p.status==="blocked"?"block":"user")}<span>${p.attention}</span><button class="btn sm ${p.status==="blocked"?"dng":"pri"}">${p.status==="blocked"?"Answer":"Review"}</button></div>`:""}
+        </a>`;}).join("")}
+      </div></div>
+
+    <div class="card s4"><div class="ch">Activity <span class="m">today</span></div>
+      <table><tbody>${D.events.map(e=>`<tr><td class="mono m" style="width:48px">${e.at}</td><td>${st({run:"running",rework:"rework",approve:"done",owner:"awaiting_owner",blocked:"blocked"}[e.kind]).replace(/>[^<]*<\/span>$/,"></span>")}</td><td><span class="mono m">${e.project}</span><br>${e.text}</td></tr>`).join("")}</tbody></table>
+    </div>
+
+    <div class="card s7"><div class="ch">Usage <span class="m">last 7 days, $ equivalent</span><span class="sp"></span><span class="mono">$${cost.toFixed(2)}</span></div>
+      <div class="bars">${days.map((v,i)=>`<div title="${dl[i]}: $${v.toFixed(2)}">${kinds.map(k=>`<b style="height:${(v/mx)*110*k[2]}px;background:${k[1]}"></b>`).join("")}</div>`).join("")}</div>
+      <div style="display:flex;gap:6px" class="mono m">${dl.map(d=>`<span style="flex:1;text-align:center">${d}</span>`).join("")}</div>
+      <div class="legend">${kinds.map(k=>`<span style="--c:${k[1]}">${k[0]} ${Math.round(k[2]*100)}%</span>`).join("")}</div>
+    </div>
+    <div class="card s5"><div class="ch">Recent runs</div>
+      <table><thead><tr><th>Run</th><th>Task</th><th>Model</th><th class="num">Time</th><th class="num">$</th></tr></thead>
+      <tbody>${D.project.runs.map(r=>`<tr><td>${st({running:"running",failed:"blocked",done:"done",approved:"done"}[r.status]).replace(L.blocked,"Failed").replace(L.done, r.kind)}</td><td class="mono">${r.task}</td><td class="mono m">${r.model}</td><td class="num">${r.dur}</td><td class="num">${r.cost.toFixed(2)}</td></tr>`).join("")}</tbody></table>
+    </div>
+  </div>`;
+}
+
+let sel = "p2-rate", tab = "checks";
+function project(){
+  const P = D.project, all = P.phases.flatMap(p=>p.tasks), t = all.find(x=>x.key===sel), v = P.verifications[t.key]||[];
+  const agent = P.flow.map((f,i)=>`${i?`<span class="conn ${f.status==="done"||f.status==="running"?"done":""}"></span>`:""}<div class="ag">${st(f.status).replace(/<\/svg>[^<]*</,"</svg><")}<div>${f.label}<small>${f.meta}</small></div></div>`).join("");
+  const jobs = P.phases.map((ph,i)=>`${i?`<span class="jc ${P.phases[i-1].status==="done"?"done":""}"></span>`:""}
+    <div class="job ${ph.status}"><header>${st(ph.status==="active"?"running":ph.status).replace(/<\/svg>[^<]*</,"</svg><")}${ph.title}<span class="m">${ph.tasks.filter(x=>x.status==="done").length}/${ph.tasks.length}</span></header>
+      ${ph.tasks.map(x=>`<button class="step" aria-pressed="${x.key===sel}" data-k="${x.key}">${ico(icon(x.status), x.status==="running"?"spin":"").replace('class="ico','style="color:var(--'+({done:"accent",run:"info",warn:"warn",bad:"danger",idle:"mfg"}[tone(x.status)])+')" class="ico')}<span>${x.title}</span><span class="k">${x.attempts?`${x.attempts}/${x.max}`:""}</span>${x.deps.length?`<span class="dep">needs ${x.deps.join(", ")}</span>`:""}</button>`).join("")}
+    </div>`).join("");
+  const logLines = (v.find(c=>c.exit)?.tail||"").split("\n");
+  const body = tab==="checks" ? `<div class="log">${[["h","$ pnpm build"],["o","✓ built in 8.2s"],["h","$ pnpm lint"],["o","✓ no problems"],["h","$ pnpm test"],...logLines.map(l=>[l.startsWith("✗")||l.includes("expected")?"e":"",l])].map((l,i)=>`<div><span>${i+1}</span><span class="${l[0]}">${l[1]||"&nbsp;"}</span></div>`).join("")}</div>`
+    : tab==="feedback" ? `<p style="margin:0 0 10px">${t.feedback||"No feedback yet."}</p><p class="m" style="margin:0">Next attempt resumes the same worker session with this feedback.</p>`
+    : `<table><thead><tr><th>Run</th><th>Kind</th><th>Model</th><th class="num">Time</th></tr></thead><tbody>${P.runs.filter(r=>r.task===t.key).map(r=>`<tr><td class="mono">${r.id}</td><td>${r.kind}</td><td class="mono m">${r.model}</td><td class="num">${r.dur}</td></tr>`).join("")||`<tr><td colspan=4 class="m">No runs yet</td></tr>`}</tbody></table>`;
+  $("#project").innerHTML = `
+    <div class="ph"><h1>Links</h1>${st(D.projects[0].status)}<span class="tag">phase/2-short-links-api</span><span class="m">${P.done}/${P.total} tasks · due ${date(P.deadline)}</span><span class="sp"></span>
+      <button class="btn">${ico("edit")}Edit plan</button><button class="btn">${ico("pause")}Pause</button></div>
+    <div class="card" style="margin-bottom:8px"><div class="ch">Agent flow</div><div class="agent">${agent}</div></div>
+    <div class="card" style="margin-bottom:8px"><div class="ch">Plan <span class="m">phases run in order; tasks start when what they need is done</span></div><div class="jobs">${jobs}</div></div>
+    <div class="g">
+      <div class="card s8"><div class="tabs" role="tablist">${[["checks","Checks"],["feedback","Feedback"],["runs","Runs"]].map(([k,l])=>`<button class="tab" role="tab" aria-selected="${tab===k}" data-t="${k}">${l}</button>`).join("")}</div>${body}</div>
+      <div class="card s4"><div class="ch">${t.title}</div>${st(t.status)}
+        <dl class="kv" style="margin:12px 0"><dt>Key</dt><dd class="mono">${t.key}</dd><dt>Attempts</dt><dd class="mono">${t.attempts} / ${t.max}</dd><dt>Model</dt><dd class="mono">${t.model} · ${t.effort}</dd><dt>Needs</dt><dd class="mono">${t.deps.join(", ")||"—"}</dd></dl>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">${t.status==="running"?`<button class="btn">${ico("term")}Live log</button>`:`<button class="btn pri">${ico("retry")}Retry now</button><button class="btn">${ico("skip")}Skip</button>`}<button class="btn">${ico("edit")}Edit</button></div>
+      </div>
+    </div>`;
+  document.querySelectorAll("[data-k]").forEach(b=>b.onclick=()=>{sel=b.dataset.k;project();});
+  document.querySelectorAll("[data-t]").forEach(b=>b.onclick=()=>{tab=b.dataset.t;project();});
+}
+
+let mode = "scratch", step = 0;
+function wizard(){
+  const M = D.modes[mode], steps = [...M.steps, "Review"], name = steps[step], h = D.stepHelp[name];
+  let f = "";
+  if (name==="Review") f = `<dl class="kv">${M.steps.map(s=>`<dt>${s}</dt><dd>${D.stepHelp[s].value||(D.stepHelp[s].items||[]).slice(0,2).join(", ")||"balanced · P3"}</dd>`).join("")}</dl>`;
+  else {
+    f = `<label class="f">${h.q}</label><p class="help">${h.hint}</p>`;
+    if (h.kind==="text") f += `<input class="in" value="${h.value}">`;
+    if (h.kind==="area") f += `<textarea class="in">${h.value}</textarea>`;
+    if (h.kind==="repo") f += `<input class="in mono" value="${h.value}"><div style="margin-top:10px">${D.repoCheck.map(c=>`<div class="st done" style="display:flex;min-height:28px">${ico("check")}<span style="color:var(--fg)">${c.text}</span></div>`).join("")}</div>`;
+    if (h.kind==="chips") f += h.items.map((c,i)=>`<button class="chip" aria-pressed="${i<2}" onclick="this.ariaPressed=this.ariaPressed!=='true'">${c}</button>`).join("")+`<button class="chip">${ico("plus")}Add</button>`;
+    if (h.kind==="list") f += h.items.map((c,i)=>`<div class="in" style="display:flex;gap:10px;align-items:center;margin-bottom:6px"><span class="nb">${i+1}</span>${c}</div>`).join("")+`<button class="btn sm">${ico("plus")}Add</button>`;
+    if (h.kind==="toggle") f += `<div class="seg"><button aria-pressed="true">Keep behaviour</button><button>May change</button></div>`;
+    if (h.kind==="profile") f += `<div style="display:grid;gap:12px"><div><div class="help">Profile</div><div class="seg">${["quality","balanced","speed","cost"].map(x=>`<button aria-pressed="${x==="balanced"}">${x}</button>`).join("")}</div></div><div><div class="help">Priority</div><div class="seg">${[1,2,3,4,5].map(x=>`<button aria-pressed="${x===3}">${x}</button>`).join("")}</div></div><div><div class="help">Deadline</div><input class="in" type="date" style="max-width:200px"></div></div>`;
+  }
+  $("#wizard").innerHTML = `<div class="g">
+    <div class="card s12"><div class="ch">New project <span class="m">choose how AI PM should start</span></div>
+      <div class="modes">${Object.entries(D.modes).map(([k,m])=>`<button class="mode" aria-pressed="${k===mode}" data-m="${k}"><b>${ico(k==="scratch"?"plus":k==="existing"?"branch":"retry")}${m.label}</b><p>${m.hint}</p><span class="tag">first agent: ${m.first}</span></button>`).join("")}</div></div>
+    <div class="card s3"><div class="ch">Steps</div><ol class="sl">${steps.map((s,i)=>`<li class="${i<step?"done":i===step?"cur":""}" data-s="${i}"><span class="nb">${i<step?"✓":i+1}</span>${s}</li>`).join("")}</ol></div>
+    <div class="card s9" style="grid-column:span 9">
+      <div class="m mono">Step ${step+1} of ${steps.length}</div><div class="stepper">${steps.map((_,i)=>`<i class="${i<=step?"on":""}"></i>`).join("")}</div>
+      <h2 style="margin:12px 0 12px;font-size:18px">${name}</h2>${f}
+      <div style="display:flex;gap:8px;margin-top:20px;border-top:1px solid var(--border-soft);padding-top:12px">${step?`<button class="btn" data-go="-1">Back</button>`:""}<span class="sp"></span><button class="btn pri" data-go="1">${name==="Review"?"Create and start":"Continue"}</button></div>
+    </div></div>`;
+  document.querySelectorAll("[data-m]").forEach(b=>b.onclick=()=>{mode=b.dataset.m;step=0;wizard();});
+  document.querySelectorAll("[data-s]").forEach(b=>b.onclick=()=>{step=+b.dataset.s;wizard();});
+  document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>{step=Math.max(0,Math.min(steps.length-1,step+ +b.dataset.go));wizard();});
+}
+
+function route(){
+  const v = (location.hash||"#overview").slice(1);
+  ["overview","project","wizard"].forEach(id=>$("#"+id).hidden = id!==v);
+  document.querySelectorAll(".navi[data-v]").forEach(a=>a.dataset.v===v?a.setAttribute("aria-current","page"):a.removeAttribute("aria-current"));
+  ({overview,project,wizard})[v]();
+}
+addEventListener("hashchange", route); route();
+</script>
+</body>
+</html>

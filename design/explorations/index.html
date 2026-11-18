@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI PM design explorations</title>
+<style>
+:root{--bg:#fafafa;--ink:#18181b;--sub:#71717a;--line:#e4e4e7}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 system-ui,-apple-system,sans-serif}
+.wrap{max-width:1400px;margin:0 auto;padding:32px 24px 60px}
+h1{font-size:28px;margin:0 0 6px;letter-spacing:-.02em}
+.lede{color:var(--sub);margin:0 0 26px;max-width:75ch}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px}
+.v{background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
+.frame{position:relative;height:360px;overflow:hidden;border-bottom:1px solid var(--line);background:#f4f4f5}
+.frame iframe{position:absolute;top:0;left:0;width:200%;height:200%;border:0;transform:scale(.5);transform-origin:0 0;pointer-events:none}
+.body{padding:16px 18px 18px;display:flex;flex-direction:column;gap:10px;flex:1}
+.body h2{margin:0;font-size:18px}
+.body .skill{color:var(--sub);font-size:13px}
+.links{display:flex;gap:8px;flex-wrap:wrap}
+.links a{border:1px solid var(--line);border-radius:8px;padding:5px 10px;text-decoration:none;color:inherit;font-size:13.5px;font-weight:500}
+.links a:hover{border-color:var(--ink)}
+.links a.open{background:var(--ink);color:#fff;border-color:var(--ink)}
+.pc{display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:13.5px}
+.pc ul{margin:4px 0 0;padding-left:18px}
+.pc b{font-size:13px}
+.score{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;font-size:12px;color:var(--sub)}
+.score div{background:#f4f4f5;border-radius:8px;padding:6px 8px}
+.score strong{display:block;color:var(--ink);font-size:14px}
+.rec{background:#fff;border:1px solid var(--line);border-left:4px solid #18181b;border-radius:10px;padding:16px 18px;margin:0 0 24px}
+.rec p{margin:4px 0}
+@media (max-width:980px){.grid{grid-template-columns:1fr}.pc{grid-template-columns:1fr}.score{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Four skills, one brief</h1>
+  <p class="lede">Each page was built by following a single skill, using the same data (the Links project plus four others) and the same three screens: the projects overview, a project's plan as a step diagram with actions, and the new-project wizard. Every page is clickable: open a task, switch wizard modes, step through questions.</p>
+
+  <div class="rec">
+    <b>My pick for AI PM: A's direction, built with D's engine.</b>
+    <p>frontend-design (A) gives the clearest "project in focus" overview and the most distinctive look. react-flow (D) is the only skill that actually teaches the diagram layer (real pan and zoom, grouped phases, auto-layout, actions inside nodes), so it's what the plan editor in M10 should be built on. Use ui-ux-pro-max (B) as an accessibility and states checklist rather than as the style source. dashboard-design (C) adds the least: it's a short style note that produces a generic admin template.</p>
+  </div>
+
+  <div class="grid">
+    <article class="v" style="grid-column:1/-1;border-color:#7a4dff">
+      <div class="frame" style="height:440px"><iframe src="e-current-plus-a.html#overview" title="Variant E preview" loading="lazy" tabindex="-1"></iframe></div>
+      <div class="body">
+        <h2>E. Current design + A's structure</h2><div class="skill">Colors, type and components from web/src/styles.css; layout ideas from frontend-design (A)</div>
+        <div class="links"><a class="open" href="e-current-plus-a.html#overview">Open overview</a><a href="e-current-plus-a.html#project">Project plan</a><a href="e-current-plus-a.html#wizard">Wizard</a></div>
+        <div class="pc"><div><b>Kept from current</b><ul><li>Black background, violet and lime, Geist, white pill nav, chips</li><li>Big % per project, 26px cards, phase-track circles, graph nodes, blurred drawer</li><li>Wizard layout: mode rail and one big question</li></ul></div>
+          <div><b>Taken from A</b><ul><li>"Needs you" first, with the action button right there</li><li>7-stop stage line and per-task ticks on every project card</li><li>All phases visible as lanes joined by "merged into main", with the agent flow above</li><li>Token stats moved below the projects</li></ul></div></div>
+      </div>
+    </article>
+    <article class="v">
+      <div class="frame"><iframe src="a-frontend-design.html#overview" title="Variant A preview" loading="lazy" tabindex="-1"></iframe></div>
+      <div class="body">
+        <h2>A. Transit board</h2><div class="skill">Skill: frontend-design (anthropics/skills)</div>
+        <div class="links"><a class="open" href="a-frontend-design.html#overview">Open overview</a><a href="a-frontend-design.html#project">Project plan</a><a href="a-frontend-design.html#wizard">Wizard</a></div>
+        <div class="pc"><div><b>Good</b><ul><li>Each project is a line through the 7 stages, so status and progress read at a glance</li><li>"Needs you" comes first, written as plain sentences</li><li>Plan is drawn by dependency depth, like a CI graph</li></ul></div>
+          <div><b>Weaker</b><ul><li>Diagram is hand-drawn SVG: no zoom or pan</li><li>Light theme only</li></ul></div></div>
+        <div class="score"><div>Project focus<strong>Strong</strong></div><div>Diagrams<strong>Good</strong></div><div>Wizard<strong>Strong</strong></div><div>Distinct look<strong>Strong</strong></div></div>
+      </div>
+    </article>
+
+    <article class="v">
+      <div class="frame"><iframe src="b-ui-ux-pro-max.html#overview" title="Variant B preview" loading="lazy" tabindex="-1"></iframe></div>
+      <div class="body">
+        <h2>B. Dark ops console</h2><div class="skill">Skill: ui-ux-pro-max (nextlevelbuilder)</div>
+        <div class="links"><a class="open" href="b-ui-ux-pro-max.html#overview">Open overview</a><a href="b-ui-ux-pro-max.html#project">Project plan</a><a href="b-ui-ux-pro-max.html#wizard">Wizard</a></div>
+        <div class="pc"><div><b>Good</b><ul><li>Closest to GitHub Actions: phase "jobs" connected left to right, with a log panel</li><li>Densest: KPIs, projects, activity, usage and runs on one screen</li><li>Icon plus text on every status</li></ul></div>
+          <div><b>Weaker</b><ul><li>Its generator suggested an FAQ landing page twice</li><li>Generic dev-tool look (slate with green)</li></ul></div></div>
+        <div class="score"><div>Project focus<strong>Good</strong></div><div>Diagrams<strong>Good</strong></div><div>Wizard<strong>Good</strong></div><div>Distinct look<strong>Weak</strong></div></div>
+      </div>
+    </article>
+
+    <article class="v">
+      <div class="frame"><iframe src="c-dashboard-design.html#overview" title="Variant C preview" loading="lazy" tabindex="-1"></iframe></div>
+      <div class="body">
+        <h2>C. Admin dashboard</h2><div class="skill">Skill: dashboard-design (sickn33/agentic-awesome-skills)</div>
+        <div class="links"><a class="open" href="c-dashboard-design.html#overview">Open overview</a><a href="c-dashboard-design.html#project">Project plan</a><a href="c-dashboard-design.html#wizard">Wizard</a></div>
+        <div class="pc"><div><b>Good</b><ul><li>Familiar layout: KPIs on top, charts, then tables</li><li>Trends show direction and whether that's good</li><li>Task table is the quickest way to scan all tasks</li></ul></div>
+          <div><b>Weaker</b><ul><li>Projects become rows in a table, not the focus</li><li>The skill is mostly one CSS snippet; the result looks like a template</li></ul></div></div>
+        <div class="score"><div>Project focus<strong>Weak</strong></div><div>Diagrams<strong>Okay</strong></div><div>Wizard<strong>Okay</strong></div><div>Distinct look<strong>Weak</strong></div></div>
+      </div>
+    </article>
+
+    <article class="v">
+      <div class="frame"><iframe src="d-react-flow.html#project" title="Variant D preview" loading="lazy" tabindex="-1"></iframe></div>
+      <div class="body">
+        <h2>D. Everything is a canvas</h2><div class="skill">Skill: react-flow (framara/react-flow-skill), real @xyflow/react v12</div>
+        <div class="links"><a class="open" href="d-react-flow.html#overview">Open overview</a><a href="d-react-flow.html#project">Project plan</a><a href="d-react-flow.html#wizard">Wizard</a></div>
+        <div class="pc"><div><b>Good</b><ul><li>Real pan, zoom and minimap; phases are groups with tasks auto-laid-out</li><li>Retry and Skip inside the node; detail panel on the side</li><li>Wizard is a map of all three paths</li></ul></div>
+          <div><b>Weaker</b><ul><li>Overview as a canvas is less scannable than a list</li><li>The skill covers mechanics, not visual style</li></ul></div></div>
+        <div class="score"><div>Project focus<strong>Good</strong></div><div>Diagrams<strong>Strong</strong></div><div>Wizard<strong>Novel</strong></div><div>Distinct look<strong>Okay</strong></div></div>
+      </div>
+    </article>
+  </div>
+</div>
+</body>
+</html>

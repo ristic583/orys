@@ -1,0 +1,31 @@
+# Pilot project for Orys (SPEC §14).
+slug: links
+name: Links
+problem: >
+  A small personal URL shortener. I want to turn long URLs into short codes,
+  share them, and see how many times each link was opened. Single user,
+  runs on my own machine or a small VPS.
+aspects:
+  - Codes must be unguessable enough that links are not trivially enumerable
+  - Redirects must be fast and never break for existing codes
+  - Everything must be covered by automated tests
+constraints:
+  - Node.js 22+ and TypeScript
+  - SQLite for storage, no external database server
+  - No paid external services
+  - Minimal dependencies
+priority: 3
+profile: balanced
+features:
+  - title: Shorten links
+    description: POST a URL, get back a short code; optional custom alias; validate URLs.
+    priority: 5
+  - title: Redirect
+    description: GET /:code redirects (302) to the original URL; 404 for unknown codes.
+    priority: 5
+  - title: Click stats
+    description: Count opens per link with timestamp; endpoint to list links with counts.
+    priority: 3
+  - title: Minimal web page
+    description: One static HTML page with a form to shorten a link and a table of links with counts.
+    priority: 2

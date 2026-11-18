@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI PM — Variant C (dashboard-design)</title>
+<!--
+  dashboard-design skill, applied as written:
+  - Modular grid: sidebar 250px + header 70px via CSS grid; content split into widgets.
+  - Hierarchy: KPIs large at top, charts in the middle, lists/tables at the bottom.
+  - Muted background #F8F9FA with white cards, 1px #E9ECEF borders, very subtle shadow.
+  - Minimalist slate palette, Inter for text, Roboto Mono for numbers.
+  - Trend color always paired with a sign/arrow; each metric declares whether up is good.
+  - Numbers right-aligned in tables. No decorative imagery.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F8F9FA;--card:#fff;--line:#E9ECEF;--text:#212529;--sub:#6C757D;--slate:#334155;--slate-2:#64748B;--brand:#3B5BDB;--ok:#2B8A3E;--okbg:#EBFBEE;--warn:#E67700;--warnbg:#FFF4E6;--bad:#C92A2A;--badbg:#FFF5F5;--runbg:#EDF2FF;--mono:"Roboto Mono",ui-monospace,monospace}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 Inter,system-ui,sans-serif}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+a{color:inherit;text-decoration:none}
+.layout{display:grid;grid-template-columns:250px 1fr;grid-template-rows:70px 1fr;min-height:100vh}
+.sidebar{grid-row:1/3;background:#fff;border-right:1px solid var(--line);padding:20px}
+.logo{font-weight:700;font-size:17px;display:flex;align-items:center;gap:10px;margin-bottom:28px}
+.logo span{width:28px;height:28px;border-radius:7px;background:var(--slate);color:#fff;display:grid;place-items:center;font-size:13px}
+.menu a{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:6px;color:var(--sub);font-weight:500;margin-bottom:2px}
+.menu a:hover{background:var(--bg);color:var(--text)}
+.menu a[aria-current=page]{background:var(--runbg);color:var(--brand)}
+.menu svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8}
+.sidebar .lbl{font-size:12px;color:var(--sub);margin:22px 12px 8px}
+.header{background:#fff;border-bottom:1px solid var(--line);padding:0 30px;display:flex;align-items:center;gap:16px}
+.header h1{font-size:18px;margin:0;font-weight:600}
+.header .sp{flex:1}
+.badge{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:3px 10px;font-size:12.5px;font-weight:500;white-space:nowrap}
+.badge.ok{background:var(--okbg);color:var(--ok)}.badge.run{background:var(--runbg);color:var(--brand)}.badge.warn{background:var(--warnbg);color:var(--warn)}.badge.bad{background:var(--badbg);color:var(--bad)}.badge.idle{background:#F1F3F5;color:var(--sub)}
+.btn{border:1px solid var(--line);background:#fff;border-radius:6px;padding:8px 14px;font-weight:500;cursor:pointer}
+.btn:hover{border-color:#CED4DA}
+.btn.primary{background:var(--slate);border-color:var(--slate);color:#fff}
+.btn.sm{padding:4px 10px;font-size:13px}
+.main{padding:30px;display:grid;grid-template-columns:repeat(4,1fr);gap:20px;align-content:start;overflow-y:auto}
+.card{background:#fff;border:1px solid var(--line);border-radius:8px;padding:24px;box-shadow:0 2px 4px rgba(0,0,0,.02)}
+.span2{grid-column:span 2}.span3{grid-column:span 3}.span4{grid-column:span 4}
+.card h3{margin:0 0 16px;font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px}
+.card h3 small{color:var(--sub);font-weight:400;font-size:13px}
+.card h3 .sp{flex:1}
+.kpi-title{font-size:.9rem;color:var(--sub)}
+.kpi-value{font-size:2rem;font-weight:700;margin-top:8px;font-family:var(--mono);letter-spacing:-.02em;line-height:1.1}
+.kpi-trend{font-size:13px;margin-top:6px;font-weight:500}
+.kpi-trend.positive{color:var(--ok)}.kpi-trend.negative{color:var(--bad)}.kpi-trend.neutral{color:var(--sub)}
+.num{font-family:var(--mono);text-align:right;white-space:nowrap}
+table{width:100%;border-collapse:collapse}
+th{font-size:12.5px;color:var(--sub);font-weight:500;text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}
+th.num{text-align:right}
+td{padding:11px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+tbody tr:last-child td{border-bottom:0}
+tbody tr.click{cursor:pointer}
+tbody tr.click:hover td{background:#FBFCFD}
+.pbar{display:flex;height:8px;border-radius:4px;overflow:hidden;background:#F1F3F5;min-width:120px}
+.pbar i{display:block}
+.legend{display:flex;gap:16px;font-size:12.5px;color:var(--sub);flex-wrap:wrap}
+.legend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--c);margin-right:6px;vertical-align:-1px}
+.hbar{display:grid;grid-template-columns:130px 1fr 60px;gap:12px;align-items:center;margin-bottom:12px}
+.hbar .pbar{height:14px}
+.alert{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--line)}
+.alert:last-child{border-bottom:0}
+.alert .ic{width:28px;height:28px;border-radius:6px;display:grid;place-items:center;flex:none;font-weight:700}
+.alert p{margin:2px 0 8px;color:var(--sub);font-size:13px}
+.stagecell{display:flex;gap:3px}
+.stagecell i{width:16px;height:6px;border-radius:3px;background:#DEE2E6}
+.stagecell i.d{background:var(--slate-2)}.stagecell i.c{background:var(--brand)}.stagecell i.w{background:var(--warn)}.stagecell i.b{background:var(--bad)}.stagecell i.k{background:var(--ok)}
+/* diagram */
+.diagram{position:relative;display:grid;grid-template-columns:repeat(3,minmax(220px,1fr));gap:56px;overflow-x:auto;padding:4px}
+.phase{position:relative;z-index:1}
+.phase h4{margin:0 0 4px;font-size:13.5px;display:flex;gap:8px;align-items:center}
+.phase .sub{color:var(--sub);font-size:12.5px;margin-bottom:12px;font-family:var(--mono)}
+.tnode{display:block;width:100%;text-align:left;background:#fff;border:1px solid var(--line);border-left:3px solid var(--c);border-radius:6px;padding:8px 10px;margin-bottom:10px;cursor:pointer}
+.tnode:hover{border-color:#CED4DA;border-left-color:var(--c)}
+.tnode[aria-pressed=true]{box-shadow:0 0 0 2px var(--brand)}
+.tnode b{display:block;font-weight:500;font-size:13.5px}
+.tnode span{font-size:12px;color:var(--sub)}
+svg.links{position:absolute;inset:0;pointer-events:none;z-index:0;overflow:visible}
+svg.links path{fill:none;stroke:#CED4DA;stroke-width:1.5}
+.detail dl{display:grid;grid-template-columns:110px 1fr;gap:8px;margin:0 0 14px;font-size:13.5px}
+.detail dt{color:var(--sub)}.detail dd{margin:0}
+pre{background:#F8F9FA;border:1px solid var(--line);border-radius:6px;padding:10px;font:12px/1.6 var(--mono);white-space:pre-wrap;margin:8px 0 0}
+.fb{background:var(--warnbg);border-radius:6px;padding:10px 12px;font-size:13.5px;margin-bottom:12px}
+/* wizard */
+.wcard{grid-column:2/4}
+.progress{height:6px;background:#F1F3F5;border-radius:3px;overflow:hidden;margin:10px 0 24px}
+.progress b{display:block;height:100%;background:var(--slate)}
+.opt{display:flex;gap:12px;align-items:flex-start;border:1px solid var(--line);border-radius:8px;padding:14px 16px;margin-bottom:10px;cursor:pointer;width:100%;text-align:left;background:#fff}
+.opt[aria-pressed=true]{border-color:var(--brand);background:var(--runbg)}
+.opt .r{width:16px;height:16px;border-radius:50%;border:2px solid #ADB5BD;margin-top:3px;flex:none}
+.opt[aria-pressed=true] .r{border:5px solid var(--brand)}
+.opt b{display:block}.opt span{color:var(--sub);font-size:13px}
+.field label{display:block;font-weight:500;margin-bottom:6px}
+.field .hint{color:var(--sub);font-size:13px;margin:0 0 10px}
+.in{width:100%;border:1px solid #CED4DA;border-radius:6px;padding:9px 12px;background:#fff}
+textarea.in{min-height:100px}
+.chip{border:1px solid #CED4DA;background:#fff;border-radius:6px;padding:5px 12px;margin:0 6px 8px 0;cursor:pointer}
+.chip[aria-pressed=true]{background:var(--slate);border-color:var(--slate);color:#fff}
+.wfoot{display:flex;justify-content:space-between;margin-top:26px;padding-top:18px;border-top:1px solid var(--line)}
+.steps-mini{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12.5px;color:var(--sub)}
+.steps-mini .on{color:var(--text);font-weight:600}
+[hidden]{display:none!important}
+@media (max-width:1100px){.main{grid-template-columns:repeat(2,1fr)}.span3,.span4,.wcard{grid-column:1/-1}}
+@media (max-width:760px){.layout{grid-template-columns:1fr}.sidebar{display:none}.main{grid-template-columns:1fr;padding:16px}.span2{grid-column:1/-1}.header{padding:0 16px}}
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="logo"><span>PM</span>AI PM</div>
+    <nav class="menu">
+      <a href="#overview" data-v="overview"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>Overview</a>
+      <a href="#project" data-v="project"><svg viewBox="0 0 24 24"><path d="M3 7h5l2 3h11v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Projects</a>
+      <a href="#overview"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 3 5-6"/></svg>Usage</a>
+      <a href="#wizard" data-v="wizard"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>New project</a>
+    </nav>
+    <div class="lbl">System</div>
+    <div style="padding:0 12px;font-size:13px;color:var(--sub)">Limit <span class="badge ok">OK · 62%</span><br><span style="display:block;margin-top:8px">Resets at 18:40</span></div>
+  </aside>
+  <header class="header"><h1 id="title">Overview</h1><span class="sp"></span>
+    <span class="badge run">● Worker: links / p2-shorten · 4m</span>
+    <a class="btn primary" href="#wizard">New project</a></header>
+  <main class="main" id="overview" hidden></main>
+  <main class="main" id="project" hidden></main>
+  <main class="main" id="wizard" hidden></main>
+</div>
+
+<script src="data.js"></script>
+<script>
+const D = window.AIPM, L = D.statusLabel, $ = s => document.querySelector(s);
+const tone = s => ({done:"ok",running:"run",executing:"run",architecting:"run",active:"run",rework:"warn",awaiting_owner:"warn",blocked:"bad",failed:"bad"}[s]||"idle");
+const sym = {ok:"✓",run:"●",warn:"!",bad:"■",idle:"○"};
+const badge = s => `<span class="badge ${tone(s)}">${sym[tone(s)]} ${L[s]}</span>`;
+const col = s => ({ok:"var(--ok)",run:"var(--brand)",warn:"var(--warn)",bad:"var(--bad)",idle:"#ADB5BD"}[tone(s)]);
+const date = d => d ? new Date(d+"T00:00").toLocaleDateString("en-GB",{day:"numeric",month:"short"}) : "—";
+const kpi = (t,v,trend,cls) => `<div class="card"><div class="kpi-title">${t}</div><div class="kpi-value">${v}</div><div class="kpi-trend ${cls}">${trend}</div></div>`;
+
+function overview(){
+  $("#title").textContent = "Overview";
+  const P = D.projects, cost = P.reduce((a,p)=>a+p.usage7d.cost,0);
+  const days = P[0].usage7d.days.map((_,i)=>P.reduce((a,p)=>a+p.usage7d.days[i],0)), mx = Math.max(...days);
+  const pts = days.map((v,i)=>`${20+i*(460/6)},${150-(v/mx)*120}`).join(" ");
+  const stage = p => D.flowSteps.map((s,i)=>`<i class="${p.status==="done"?"k":i<p.flowAt?"d":i===p.flowAt?{run:"c",warn:"w",bad:"b",ok:"k",idle:""}[tone(p.status)]:""}" title="${s}"></i>`).join("");
+  $("#overview").innerHTML = `
+    ${kpi("Active projects", P.filter(p=>p.status!=="done").length, "→ same as last week", "neutral")}
+    ${kpi("Tasks done (7 days)", 14, "▲ +5 vs previous week", "positive")}
+    ${kpi("Waiting for you", P.filter(p=>p.attention).length, "▲ +1 since yesterday (lower is better)", "negative")}
+    ${kpi("Spend equivalent (7 days)", "$"+cost.toFixed(2), "▼ −8% vs previous week (lower is better)", "positive")}
+
+    <div class="card span2"><h3>Progress by project <small>tasks</small><span class="sp"></span>
+      <span class="legend"><span style="--c:var(--ok)">Done</span><span style="--c:var(--brand)">Running</span><span style="--c:var(--warn)">Rework</span><span style="--c:#DEE2E6">Left</span></span></h3>
+      ${P.map(p=>{ const t=p.total||1, run=p.slug==="links"?1:0, rw=p.slug==="links"?1:0;
+        return `<div class="hbar"><a href="#project"><b style="font-weight:500">${p.name}</b></a><div class="pbar">
+          <i style="width:${p.done/t*100}%;background:var(--ok)"></i><i style="width:${run/t*100}%;background:var(--brand)"></i><i style="width:${rw/t*100}%;background:var(--warn)"></i></div>
+          <span class="num">${p.total?`${p.done}/${p.total}`:"—"}</span></div>`;}).join("")}
+    </div>
+    <div class="card span2"><h3>Spend per day <small>all projects, $ equivalent</small></h3>
+      <svg viewBox="0 0 500 175" width="100%" role="img" aria-label="Spend per day, last 7 days">
+        ${[0,1,2,3].map(i=>`<line x1="20" x2="480" y1="${30+i*40}" y2="${30+i*40}" stroke="#F1F3F5"/>`).join("")}
+        <polyline points="20,150 ${pts} 480,150" fill="rgba(59,91,219,.08)" stroke="none"/>
+        <polyline points="${pts}" fill="none" stroke="var(--brand)" stroke-width="2"/>
+        ${days.map((v,i)=>`<circle cx="${20+i*(460/6)}" cy="${150-(v/mx)*120}" r="3" fill="#fff" stroke="var(--brand)" stroke-width="2"><title>$${v.toFixed(2)}</title></circle><text x="${20+i*(460/6)}" y="170" font-size="11" text-anchor="middle" fill="#6C757D">${["Tue","Wed","Thu","Fri","Sat","Sun","Mon"][i]}</text>`).join("")}
+      </svg>
+    </div>
+
+    <div class="card span3"><h3>Projects</h3>
+      <table><thead><tr><th>Project</th><th>Status</th><th>Stage</th><th>Progress</th><th class="num">Priority</th><th class="num">Deadline</th><th class="num">7d spend</th></tr></thead>
+      <tbody>${P.map(p=>`<tr class="click" onclick="location.hash='project'"><td><b style="font-weight:600">${p.name}</b><div style="color:var(--sub);font-size:12.5px">${p.mode}, ${p.profile}</div></td>
+        <td>${badge(p.status)}</td><td><div class="stagecell">${stage(p)}</div><div style="font-size:12px;color:var(--sub);margin-top:4px">${D.flowSteps[Math.min(p.flowAt,6)]}</div></td>
+        <td><div class="pbar"><i style="width:${p.total?p.done/p.total*100:0}%;background:var(--ok)"></i></div></td>
+        <td class="num">${p.priority}</td><td class="num">${date(p.deadline)}</td><td class="num">$${p.usage7d.cost.toFixed(2)}</td></tr>`).join("")}</tbody></table>
+    </div>
+    <div class="card"><h3>Needs attention</h3>
+      ${P.filter(p=>p.attention).map(p=>`<div class="alert"><span class="ic" style="background:${p.status==="blocked"?"var(--badbg)":"var(--warnbg)"};color:${col(p.status)}">${p.status==="blocked"?"■":"!"}</span>
+        <div><b>${p.name}</b><p>${p.attention}</p><button class="btn sm ${p.status==="blocked"?"":"primary"}">${p.status==="blocked"?"Answer":"Review plan"}</button></div></div>`).join("")}
+    </div>
+    <div class="card span4"><h3>Activity</h3><table><tbody>${D.events.map(e=>`<tr><td class="num" style="width:60px;text-align:left;color:var(--sub)">${e.at}</td><td style="width:140px">${e.project}</td><td>${e.text}</td></tr>`).join("")}</tbody></table></div>`;
+}
+
+let sel = "p2-rate";
+function project(){
+  $("#title").textContent = "Links";
+  const P = D.project, all = P.phases.flatMap(p=>p.tasks), t = all.find(x=>x.key===sel), v = P.verifications[t.key]||[];
+  $("#project").innerHTML = `
+    ${kpi("Tasks done", `${P.done}/${P.total}`, `▲ +3 this week`, "positive")}
+    ${kpi("Current phase", "2 of 3", "Short links API", "neutral")}
+    ${kpi("Reworks this phase", 2, "▲ +1 today (lower is better)", "negative")}
+    ${kpi("Spend equivalent (7 days)", "$"+P.usage7d.cost.toFixed(2), "▼ −12% vs previous week", "positive")}
+    <div class="card span4"><h3>Plan <small>phases left to right, lines show what each task needs</small><span class="sp"></span>
+      <button class="btn sm">Edit plan</button><button class="btn sm">Pause project</button></h3>
+      <div class="diagram" id="dg"><svg class="links"></svg>
+        ${P.phases.map(ph=>`<div class="phase"><h4>Phase ${ph.idx}: ${ph.title} ${badge(ph.status)}</h4><div class="sub">${ph.branch}</div>
+          ${ph.tasks.map(x=>`<button class="tnode" style="--c:${col(x.status)}" data-k="${x.key}" aria-pressed="${x.key===sel}"><b>${x.title}</b><span>${sym[tone(x.status)]} ${L[x.status]}${x.attempts?` · attempt ${x.attempts}/${x.max}`:""}</span></button>`).join("")}</div>`).join("")}
+      </div>
+    </div>
+    <div class="card span3"><h3>Tasks</h3>
+      <table><thead><tr><th>Task</th><th>Phase</th><th>Status</th><th>Model</th><th class="num">Attempts</th><th></th></tr></thead>
+      <tbody>${P.phases.flatMap(ph=>ph.tasks.map(x=>`<tr class="click" data-k="${x.key}"><td>${x.title}<div style="font:12px var(--mono);color:var(--sub)">${x.key}</div></td><td>${ph.idx}</td><td>${badge(x.status)}</td><td style="font-family:var(--mono);font-size:12.5px">${x.model}/${x.effort}</td><td class="num">${x.attempts}/${x.max}</td>
+        <td style="text-align:right">${x.status==="rework"?`<button class="btn sm">Retry</button>`:x.status==="pending"?`<button class="btn sm">Skip</button>`:""}</td></tr>`)).join("")}</tbody></table>
+    </div>
+    <div class="card detail"><h3>${t.title}</h3>${badge(t.status)}
+      <dl style="margin-top:14px"><dt>Key</dt><dd style="font-family:var(--mono)">${t.key}</dd><dt>Attempts</dt><dd>${t.attempts} of ${t.max}</dd><dt>Model</dt><dd>${t.model}, ${t.effort}</dd><dt>Needs</dt><dd>${t.deps.join(", ")||"—"}</dd></dl>
+      ${t.feedback?`<div class="fb">${t.feedback}</div>`:""}
+      ${v.length?`<table><tbody>${v.map(c=>`<tr><td>${c.exit?"✗":"✓"} ${c.cmd}</td><td class="num">${(c.ms/1000).toFixed(1)}s</td></tr>`).join("")}</tbody></table>${v.filter(c=>c.tail).map(c=>`<pre>${c.tail}</pre>`).join("")}`:""}
+      <div style="display:flex;gap:8px;margin-top:14px">${t.status==="running"?`<button class="btn">Open log</button>`:`<button class="btn primary">Retry now</button><button class="btn">Skip</button>`}</div>
+    </div>`;
+  document.querySelectorAll("[data-k]").forEach(b=>b.onclick=()=>{sel=b.dataset.k;project();});
+  requestAnimationFrame(()=>{
+    const g = $("#dg"), svg = g.querySelector("svg"), box = g.getBoundingClientRect(); let d = "";
+    all.forEach(x=>x.deps.forEach(k=>{
+      const a = g.querySelector(`.tnode[data-k="${k}"]`).getBoundingClientRect(), b = g.querySelector(`.tnode[data-k="${x.key}"]`).getBoundingClientRect();
+      if (Math.abs(a.left-b.left) < 5) { const x0 = a.left-box.left-1, y1=a.top+a.height/2-box.top, y2=b.top+b.height/2-box.top; d += `<path d="M${x0},${y1} C${x0-22},${y1} ${x0-22},${y2} ${x0},${y2}"/>`; }
+      else { const x1=a.right-box.left, y1=a.top+a.height/2-box.top, x2=b.left-box.left, y2=b.top+b.height/2-box.top, m=(x1+x2)/2; d += `<path d="M${x1},${y1} C${m},${y1} ${m},${y2} ${x2},${y2}"/>`; }
+    }));
+    svg.innerHTML = d;
+  });
+}
+
+let mode = "scratch", step = 0;
+function wizard(){
+  $("#title").textContent = "New project";
+  const M = D.modes[mode], steps = ["Kind of project", ...M.steps, "Review"], name = steps[step], h = D.stepHelp[name];
+  let f = "";
+  if (name==="Kind of project") f = Object.entries(D.modes).map(([k,m])=>`<button class="opt" aria-pressed="${k===mode}" data-m="${k}"><span class="r"></span><span><b>${m.label}</b><span>${m.hint} First agent: ${m.first}.</span></span></button>`).join("");
+  else if (name==="Review") f = `<table><tbody>${M.steps.map(s=>`<tr><td style="color:var(--sub);width:40%">${s}</td><td>${D.stepHelp[s].value||(D.stepHelp[s].items||[]).slice(0,2).join(", ")||"Balanced, priority 3"}</td></tr>`).join("")}</tbody></table>`;
+  else {
+    f = `<div class="field"><label>${h.q}</label><p class="hint">${h.hint}</p>`;
+    if (h.kind==="text") f += `<input class="in" value="${h.value}">`;
+    if (h.kind==="area") f += `<textarea class="in">${h.value}</textarea>`;
+    if (h.kind==="repo") f += `<input class="in" value="${h.value}" style="font-family:var(--mono)"><table style="margin-top:10px"><tbody>${D.repoCheck.map(c=>`<tr><td style="color:var(--ok);width:24px">✓</td><td>${c.text}</td></tr>`).join("")}</tbody></table>`;
+    if (h.kind==="chips") f += h.items.map((c,i)=>`<button class="chip" aria-pressed="${i<2}" onclick="this.ariaPressed=this.ariaPressed!=='true'">${c}</button>`).join("")+`<button class="chip">+ Add</button>`;
+    if (h.kind==="list") f += `<table><tbody>${h.items.map((c,i)=>`<tr><td class="num" style="width:30px;text-align:left">${i+1}</td><td>${c}</td><td style="text-align:right;color:var(--sub)">Priority ${5-i}</td></tr>`).join("")}</tbody></table><button class="btn sm" style="margin-top:8px">+ Add feature</button>`;
+    if (h.kind==="toggle") f += `<button class="opt" aria-pressed="true"><span class="r"></span><span><b>Yes, keep it the same</b><span>Tests that pin current behaviour are written first.</span></span></button><button class="opt"><span class="r"></span><span><b>No, it may change</b></span></button>`;
+    if (h.kind==="profile") f += `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px"><div><label>Profile</label><select class="in"><option>Balanced</option><option>Quality</option><option>Speed</option><option>Cost</option></select></div><div><label>Priority</label><select class="in"><option>3</option><option>1</option><option>2</option><option>4</option><option>5</option></select></div><div><label>Deadline</label><input class="in" type="date"></div></div>`;
+    f += `</div>`;
+  }
+  $("#wizard").innerHTML = `<div class="card wcard">
+    <div style="display:flex;justify-content:space-between;color:var(--sub);font-size:13px"><span>Step ${step+1} of ${steps.length}</span><span>${D.modes[mode].label}</span></div>
+    <div class="progress"><b style="width:${(step+1)/steps.length*100}%"></b></div>
+    <h3 style="font-size:18px">${name}</h3>${f}
+    <div class="wfoot">${step?`<button class="btn" data-go="-1">Back</button>`:"<span></span>"}<button class="btn primary" data-go="1">${name==="Review"?"Create and start":"Continue"}</button></div>
+    <div class="steps-mini" style="margin-top:18px">${steps.map((s,i)=>`<span class="${i===step?"on":""}" data-s="${i}" style="cursor:pointer">${i<step?"✓ ":""}${s}</span>`).join("")}</div>
+  </div>`;
+  document.querySelectorAll("[data-m]").forEach(b=>b.onclick=()=>{mode=b.dataset.m;wizard();});
+  document.querySelectorAll("[data-s]").forEach(b=>b.onclick=()=>{step=+b.dataset.s;wizard();});
+  document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>{step=Math.max(0,Math.min(steps.length-1,step+ +b.dataset.go));wizard();});
+}
+
+function route(){
+  const v = (location.hash||"#overview").slice(1);
+  ["overview","project","wizard"].forEach(id=>$("#"+id).hidden = id!==v);
+  document.querySelectorAll(".menu a[data-v]").forEach(a=>a.dataset.v===v?a.setAttribute("aria-current","page"):a.removeAttribute("aria-current"));
+  ({overview,project,wizard})[v]();
+}
+addEventListener("hashchange", route); route();
+</script>
+</body>
+</html>
